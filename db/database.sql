@@ -1,0 +1,111 @@
+-- MoodJourney: skema lengkap (instalasi baru).
+-- Catatan: aplikasi menjalankan migrasi ini otomatis saat pertama kali dibuka,
+-- jadi file ini hanya perlu dijalankan manual kalau kamu mau menyiapkan database lebih dulu.
+-- Tidak memakai FOREIGN KEY agar kompatibel dengan TiDB Cloud.
+
+CREATE TABLE IF NOT EXISTS app_meta (
+    k VARCHAR(50) NOT NULL PRIMARY KEY,
+    v VARCHAR(100) NOT NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(150) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    role ENUM('user','admin') NOT NULL DEFAULT 'user',
+    bio TEXT NULL,
+    is_active TINYINT(1) NOT NULL DEFAULT 1,
+    last_login_at DATETIME NULL,
+    reminder_email TINYINT(1) NOT NULL DEFAULT 0,
+    last_reminded_on DATE NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS diary (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    mood VARCHAR(30) NOT NULL,
+    intensity TINYINT NOT NULL DEFAULT 3,
+    tags VARCHAR(255) NULL,
+    activity VARCHAR(150) NULL,
+    note TEXT NULL,
+    diary_date DATE NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NULL,
+    INDEX idx_diary_user (user_id),
+    INDEX idx_diary_user_date (user_id, diary_date)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS chat_rooms (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    status ENUM('open','closed') NOT NULL DEFAULT 'open',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_message_at DATETIME NULL,
+    INDEX idx_chat_user (user_id)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS messages (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    chat_room_id INT NOT NULL,
+    sender_id INT NOT NULL,
+    message TEXT NOT NULL,
+    is_read TINYINT(1) NOT NULL DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_msg_room (chat_room_id),
+    INDEX idx_msg_sender (sender_id)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS sessions (
+    id VARCHAR(128) NOT NULL PRIMARY KEY,
+    data MEDIUMTEXT NOT NULL,
+    expires_at INT UNSIGNED NOT NULL,
+    INDEX idx_sessions_expires (expires_at)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS rate_limits (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    bucket VARCHAR(190) NOT NULL,
+    created_at INT UNSIGNED NOT NULL,
+    INDEX idx_rate_bucket (bucket, created_at)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS password_resets (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    token_hash CHAR(64) NULL,
+    expires_at DATETIME NULL,
+    used_at DATETIME NULL,
+    handled_at DATETIME NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_reset_user (user_id),
+    INDEX idx_reset_token (token_hash)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS achievements (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    code VARCHAR(40) NOT NULL,
+    earned_at DATETIME NOT NULL,
+    seen TINYINT(1) NOT NULL DEFAULT 0,
+    UNIQUE KEY uq_ach_user_code (user_id, code)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS goals (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    tag VARCHAR(30) NOT NULL,
+    target TINYINT NOT NULL DEFAULT 3,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_goals_user (user_id)
+) ENGINE=InnoDB;
+
+-- Akun admin awal. PASSWORD BAWAAN: admin123 -> WAJIB diganti setelah login pertama
+-- (panel admin akan menampilkan peringatan selama password ini belum diubah).
+INSERT INTO users (name, email, password, role)
+SELECT 'Admin MoodJourney', 'admin@moodjourney.test',
+       '$2y$10$9gTRGTvMdfwTvkaTCqULaeXgCz3EGiTKkZcMWrwgCSbUjJhBHpb7y', 'admin'
+WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = 'admin@moodjourney.test');
+
+REPLACE INTO app_meta (k, v) VALUES ('schema_version', '3');

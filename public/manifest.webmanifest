@@ -1,0 +1,20 @@
+{
+  "name": "MoodJourney",
+  "short_name": "MoodJourney",
+  "description": "Catat mood harian, kenali polanya, dan jaga kebiasaan baik.",
+  "lang": "id",
+  "start_url": "/dashboard.php",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#14131a",
+  "theme_color": "#6d5ce8",
+  "icons": [
+    { "src": "/assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Catat mood", "url": "/diary.php" },
+    { "name": "Statistik", "url": "/statistics.php" }
+  ]
+}
