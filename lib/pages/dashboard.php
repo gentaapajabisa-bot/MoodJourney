@@ -37,6 +37,7 @@ $recent = db_all(
 attach_photo_ids($recent, $userId);
 
 $showSupport = needs_support_hint($userId);
+$journey = journey_load($userId);
 
 $goals = array_slice(goals_with_progress($userId), 0, 3);
 $badgeRows = db_all(
@@ -83,11 +84,14 @@ page_header("Dashboard", ["active" => "dashboard"]);
     <?php endif; ?>
 
     <section class="grid-3">
-        <div class="stat-card" data-tilt="6">
-            <span class="muted">Streak sekarang</span>
-            <span class="number"><?= $streak["current"] ?> <small>hari</small></span>
-            <span class="stat-note">Terpanjang: <?= $streak["longest"] ?> hari</span>
-        </div>
+        <a class="stat-card journey-mini" data-tilt="6" href="/metamorfosis.php" aria-label="Lihat metamorfosis kupu-kupumu">
+            <span class="journey-mini-art"><?= butterfly_svg($journey["display"], $journey["colors"], ["animate" => false, "label" => BUTTERFLY_STAGES[$journey["display"]]["label"]]) ?></span>
+            <span class="journey-mini-body">
+                <span class="muted">Perjalananmu</span>
+                <span class="number"><?= $journey["days"] ?> <small>hari</small></span>
+                <span class="stat-note"><?= h($journey["resting"] ? "Kepompong, sedang istirahat" : BUTTERFLY_STAGES[$journey["display"]]["label"]) ?> · beruntun <?= $streak["current"] ?> hari</span>
+            </span>
+        </a>
 
         <div class="stat-card" data-tilt="6">
             <span class="muted">Mood 7 hari terakhir</span>

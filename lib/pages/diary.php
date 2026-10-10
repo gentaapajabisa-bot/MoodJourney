@@ -72,6 +72,7 @@ if (is_post()) {
     }
 
     if (!$errors) {
+        $stageBefore = journey_load($userId)["stage"];
         $tags = implode(",", $form["tags"]);
         if ($entry) {
             db_exec(
@@ -101,6 +102,11 @@ if (is_post()) {
         // tanda krisis di cerita: tampilkan dukungan dengan lembut (tidak ada yang dikirim ke staf)
         if (crisis_detect($form["note"] . " " . $form["activity"])) {
             flash("info", crisis_message() . " Kamu juga bisa mengajukan bicara dengan konselor di halaman Dukungan.");
+        }
+
+        $stageAfter = journey_load($userId)["stage"];
+        if (array_search($stageAfter, array_keys(BUTTERFLY_STAGES), true) > array_search($stageBefore, array_keys(BUTTERFLY_STAGES), true)) {
+            flash("info", journey_stage_up_text($stageAfter));
         }
 
         $newAchievements = check_achievements($userId);

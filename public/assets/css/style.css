@@ -2586,3 +2586,269 @@ th {
         transform: none;
     }
 }
+
+/* ---------- Metamorfosis (streak kupu-kupu) ---------- */
+
+.mj-svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+}
+
+.mj-wing,
+.mj-flap,
+.mj-flyer,
+.mj-egg,
+.mj-larva,
+.mj-pupa,
+.mj-zzz,
+.mj-sparkle {
+    transform-box: view-box;
+}
+
+.mj-wing {
+    transform-origin: 100px 100px;
+}
+
+.mj-svg:not(.is-still) .mj-wing {
+    animation: mj-flap 1.8s ease-in-out infinite;
+}
+
+.mj-svg-young:not(.is-still) .mj-wing {
+    animation-duration: 3.2s;
+}
+
+.mj-svg:not(.is-still) .mj-flyer {
+    animation: mj-float 4.2s ease-in-out infinite;
+}
+
+.mj-svg:not(.is-still) .mj-egg {
+    transform-origin: 100px 166px;
+    animation: mj-wobble 4s ease-in-out infinite;
+}
+
+.mj-svg:not(.is-still) .mj-larva {
+    animation: mj-inch 2.6s ease-in-out infinite;
+}
+
+.mj-svg:not(.is-still) .mj-pupa {
+    transform-origin: 100px 20px;
+    animation: mj-sway 5s ease-in-out infinite;
+}
+
+.mj-svg:not(.is-still) .mj-zzz {
+    color: var(--primary);
+    animation: mj-zzz 3s ease-in-out infinite;
+}
+
+.mj-zzz {
+    color: var(--primary);
+}
+
+.mj-svg:not(.is-still) .mj-sparkle {
+    animation: mj-twinkle 2.4s ease-in-out infinite;
+}
+
+@keyframes mj-flap {
+    0%, 100% { transform: scaleX(1); }
+    50% { transform: scaleX(0.45); }
+}
+
+@keyframes mj-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+}
+
+@keyframes mj-wobble {
+    0%, 100% { transform: rotate(0); }
+    25% { transform: rotate(-3deg); }
+    75% { transform: rotate(3deg); }
+}
+
+@keyframes mj-inch {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(5px); }
+}
+
+@keyframes mj-sway {
+    0%, 100% { transform: rotate(-2.5deg); }
+    50% { transform: rotate(2.5deg); }
+}
+
+@keyframes mj-zzz {
+    0%, 100% { opacity: 0.35; transform: translateY(2px); }
+    50% { opacity: 1; transform: translateY(-3px); }
+}
+
+@keyframes mj-twinkle {
+    0%, 100% { opacity: 0.25; }
+    50% { opacity: 1; }
+}
+
+.journey-hero {
+    display: grid;
+    grid-template-columns: minmax(180px, 280px) 1fr;
+    gap: 32px;
+    align-items: center;
+    background:
+        radial-gradient(circle at 20% 20%, color-mix(in srgb, var(--wing-1, var(--primary)) 18%, transparent), transparent 60%),
+        var(--surface);
+}
+
+.journey-art {
+    width: 100%;
+    max-width: 280px;
+    margin: 0 auto;
+}
+
+.journey-info h2 {
+    margin: 8px 0 0;
+    font-size: 30px;
+    letter-spacing: -0.02em;
+}
+
+.journey-chip {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: var(--primary-soft);
+    color: var(--primary);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.journey-tagline {
+    margin: 2px 0 0;
+    color: var(--primary);
+    font-weight: 700;
+}
+
+.journey-text {
+    margin: 12px 0;
+    line-height: 1.6;
+}
+
+.journey-count {
+    margin: 12px 0 8px;
+}
+
+.journey-count strong {
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--primary);
+}
+
+.journey-count span,
+.journey-next {
+    color: var(--muted);
+}
+
+.journey-next {
+    margin: 8px 0 14px;
+    font-size: 14px;
+}
+
+.journey-note {
+    margin: 0 0 14px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: var(--success-bg);
+    color: var(--success);
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.journey-done {
+    margin: 0;
+    color: var(--success);
+    font-weight: 700;
+}
+
+.stage-track {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin: 16px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.stage-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 12px 6px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    text-align: center;
+}
+
+.stage-item .stage-art {
+    width: 72px;
+}
+
+.stage-item small {
+    color: var(--muted);
+}
+
+.stage-item.is-current {
+    border-color: var(--primary);
+    background: var(--primary-soft);
+}
+
+.stage-item.is-locked .stage-art {
+    filter: grayscale(1);
+    opacity: 0.4;
+}
+
+.journey-rules {
+    margin: 12px 0 0;
+    padding-left: 20px;
+    display: grid;
+    gap: 10px;
+    line-height: 1.6;
+}
+
+.journey-mini {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    color: inherit;
+    text-decoration: none;
+}
+
+.journey-mini-art {
+    flex: 0 0 76px;
+    width: 76px;
+}
+
+.journey-mini-body {
+    display: block;
+    min-width: 0;
+}
+
+@media (max-width: 720px) {
+    .journey-hero {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .stage-track {
+        grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mj-svg .mj-wing,
+    .mj-svg .mj-flyer,
+    .mj-svg .mj-egg,
+    .mj-svg .mj-larva,
+    .mj-svg .mj-pupa,
+    .mj-svg .mj-zzz,
+    .mj-svg .mj-sparkle {
+        animation: none !important;
+    }
+}

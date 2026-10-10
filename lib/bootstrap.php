@@ -33,6 +33,7 @@ require_once __DIR__ . "/prompts.php";
 require_once __DIR__ . "/safety.php";
 require_once __DIR__ . "/bot.php";
 require_once __DIR__ . "/photos.php";
+require_once __DIR__ . "/butterfly.php";
 require_once __DIR__ . "/layout.php";
 
 function render_fatal(Throwable $e): void

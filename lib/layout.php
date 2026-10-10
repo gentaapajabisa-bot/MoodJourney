@@ -176,7 +176,7 @@ function page_footer(array $scripts = []): void
 <?php
 }
 
-/** Sub-navigasi untuk halaman Wawasan. $active: stats | weekly | goals | badges */
+/** Sub-navigasi untuk halaman Wawasan. $active: stats | weekly | goals | badges | butterfly */
 function insights_tabs(string $active): void
 {
     $tabs = [
@@ -184,6 +184,7 @@ function insights_tabs(string $active): void
         "weekly"  => ["/ringkasan.php", "Ringkasan mingguan"],
         "goals"   => ["/target.php", "Target"],
         "badges"  => ["/pencapaian.php", "Pencapaian"],
+        "butterfly" => ["/metamorfosis.php", "Metamorfosis"],
     ];
     echo '<nav class="segmented insights-tabs" aria-label="Wawasan">';
     foreach ($tabs as $key => [$href, $label]) {

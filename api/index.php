@@ -41,6 +41,7 @@ $routes = [
     "ringkasan"      => "weekly",
     "target"         => "goals",
     "pencapaian"     => "achievements",
+    "metamorfosis"   => "butterfly",
     "cron/reminder"  => "cron_reminder",
     "dukungan"       => "support",
     "bot"            => "bot",
