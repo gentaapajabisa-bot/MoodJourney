@@ -8,13 +8,15 @@ if ($user === null) {
     exit;
 }
 
-$isAdmin = $user["role"] === "admin";
-$role = $isAdmin ? "admin" : "user";
+$isStaff = is_staff($user["role"]);
+$role = $isStaff ? "admin" : "user";
 $after = max(0, (int) ($_GET["after"] ?? 0));
 
-if ($isAdmin) {
+if ($isStaff) {
     $roomId = (int) ($_GET["room"] ?? 0);
-    $room = $roomId > 0 ? db_one("SELECT id, status FROM chat_rooms WHERE id = ? LIMIT 1", "i", [$roomId]) : null;
+    $room = ($roomId > 0 && staff_can_access_room($user, $roomId))
+        ? db_one("SELECT id, status FROM chat_rooms WHERE id = ? LIMIT 1", "i", [$roomId])
+        : null;
 } else {
     $room = chat_get_room((int) $user["id"], false);
     $roomId = $room ? (int) $room["id"] : 0;
@@ -33,7 +35,7 @@ if ($rows) {
 $html = [];
 $lastId = $after;
 foreach ($rows as $m) {
-    $html[] = chat_message_html($m, $role, $isAdmin);
+    $html[] = chat_message_html($m, $role, $isStaff);
     $lastId = max($lastId, (int) $m["id"]);
 }
 

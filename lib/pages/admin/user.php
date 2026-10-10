@@ -12,7 +12,7 @@ $requestId = (int) ($_POST["request_id"] ?? 0);
 
 /* Semua aksi pada pengguna hanya berlaku untuk akun biasa, tidak pernah untuk admin. */
 $target = $userId > 0
-    ? db_one("SELECT id, name, email, is_active FROM users WHERE id = ? AND role = 'user' LIMIT 1", "i", [$userId])
+    ? db_one("SELECT id, name, email, role, is_active FROM users WHERE id = ? AND role IN ('user', 'counselor') LIMIT 1", "i", [$userId])
     : null;
 
 switch ($action) {
@@ -68,9 +68,42 @@ switch ($action) {
         }
         break;
 
+    case "create_counselor":
+        $cname = trim((string) ($_POST["name"] ?? ""));
+        $cemail = mb_strtolower(trim((string) ($_POST["email"] ?? "")));
+        if ($cname === "" || mb_strlen($cname) > 100 || !filter_var($cemail, FILTER_VALIDATE_EMAIL) || mb_strlen($cemail) > 150) {
+            flash("error", "Isi nama dan email konselor dengan benar.");
+            break;
+        }
+        if (db_one("SELECT id FROM users WHERE email = ? LIMIT 1", "s", [$cemail])) {
+            flash("error", "Email itu sudah terdaftar.");
+            break;
+        }
+        // password acak yang tidak diketahui siapa pun; konselor membuat sendiri lewat tautan
+        [, $newId] = db_exec(
+            "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, 'counselor')",
+            "sss",
+            [$cname, $cemail, password_hash(bin2hex(random_bytes(24)), PASSWORD_DEFAULT)]
+        );
+        $token = bin2hex(random_bytes(32));
+        db_exec(
+            "INSERT INTO password_resets (user_id, token_hash, expires_at, handled_at)
+             VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 24 HOUR), NOW())",
+            "is",
+            [$newId, hash("sha256", $token)]
+        );
+        $base = app_base_url();
+        if ($base === "") {
+            $scheme = (($_SERVER["HTTP_X_FORWARDED_PROTO"] ?? "https") === "http") ? "http" : "https";
+            $base = $scheme . "://" . ($_SERVER["HTTP_HOST"] ?? "localhost");
+        }
+        $_SESSION["reset_link"] = ["name" => $cname . " (konselor, berlaku 24 jam)", "url" => $base . "/reset.php?token=" . $token];
+        flash("success", "Akun konselor dibuat. Kirim tautan di bawah agar ia membuat password sendiri.");
+        break;
+
     case "delete":
-        if (!$target) {
-            flash("error", "Pengguna tidak ditemukan.");
+        if (!$target || $target["role"] !== "user") {
+            flash("error", "Hanya akun pengguna biasa yang bisa dihapus. Konselor cukup dinonaktifkan.");
             break;
         }
         delete_user_data((int) $target["id"]);

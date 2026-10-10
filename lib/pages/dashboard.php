@@ -1,8 +1,5 @@
 <?php
-$user = require_login();
-if ($user["role"] === "admin") {
-    redirect("/admin/");
-}
+$user = require_member();
 $userId = (int) $user["id"];
 
 $total = (int) db_value("SELECT COUNT(*) FROM diary WHERE user_id = ?", "i", [$userId], 0);
@@ -36,6 +33,8 @@ $recent = db_all(
     "i",
     [$userId]
 );
+
+attach_photo_ids($recent, $userId);
 
 $showSupport = needs_support_hint($userId);
 

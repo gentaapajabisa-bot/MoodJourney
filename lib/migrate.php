@@ -8,7 +8,7 @@
  * terkait dilakukan di kode aplikasi.
  */
 
-const SCHEMA_VERSION = 3;
+const SCHEMA_VERSION = 4;
 
 function column_exists(mysqli $db, string $table, string $column): bool
 {
@@ -54,6 +54,24 @@ function add_column(mysqli $db, string $table, string $column, string $definitio
             throw new RuntimeException("Migrasi gagal ($table.$column): " . $db->error);
         }
     }
+}
+
+function column_type(mysqli $db, string $table, string $column): string
+{
+    $stmt = $db->prepare(
+        "SELECT COLUMN_TYPE FROM information_schema.columns
+         WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ?"
+    );
+    if ($stmt === false) {
+        return "";
+    }
+    $stmt->bind_param("ss", $table, $column);
+    $stmt->execute();
+    $type = "";
+    $stmt->bind_result($type);
+    $stmt->fetch();
+    $stmt->close();
+    return (string) $type;
 }
 
 function add_index(mysqli $db, string $table, string $index, string $columns): void
@@ -196,11 +214,47 @@ function ensure_schema(mysqli $db): void
         ) ENGINE=InnoDB"
     );
 
+    run_query($db,
+        "CREATE TABLE IF NOT EXISTS diary_photos (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            diary_id INT NOT NULL,
+            user_id INT NOT NULL,
+            mime VARCHAR(30) NOT NULL,
+            size INT NOT NULL,
+            data MEDIUMBLOB NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY uq_photo_diary (diary_id),
+            INDEX idx_photo_user (user_id)
+        ) ENGINE=InnoDB"
+    );
+    run_query($db,
+        "CREATE TABLE IF NOT EXISTS support_requests (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT NOT NULL,
+            topic VARCHAR(60) NOT NULL,
+            message TEXT NULL,
+            status ENUM('waiting','active','done','cancelled') NOT NULL DEFAULT 'waiting',
+            counselor_id INT NULL,
+            urgent TINYINT(1) NOT NULL DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME NULL,
+            INDEX idx_sr_user (user_id),
+            INDEX idx_sr_status (status),
+            INDEX idx_sr_counselor (counselor_id)
+        ) ENGINE=InnoDB"
+    );
+
     /* ---- Kolom baru di tabel lama ---- */
     add_column($db, "users", "is_active", "TINYINT(1) NOT NULL DEFAULT 1");
     add_column($db, "users", "last_login_at", "DATETIME NULL");
     add_column($db, "users", "reminder_email", "TINYINT(1) NOT NULL DEFAULT 0");
     add_column($db, "users", "last_reminded_on", "DATE NULL");
+
+    // peran konselor: tambahkan ke ENUM role bila belum ada
+    if (strpos(column_type($db, "users", "role"), "counselor") === false) {
+        run_query($db, "ALTER TABLE users MODIFY COLUMN role ENUM('user','admin','counselor') NOT NULL DEFAULT 'user'");
+    }
+    add_column($db, "messages", "flagged", "TINYINT(1) NOT NULL DEFAULT 0");
 
     add_column($db, "diary", "intensity", "TINYINT NOT NULL DEFAULT 3");
     add_column($db, "diary", "tags", "VARCHAR(255) NULL");

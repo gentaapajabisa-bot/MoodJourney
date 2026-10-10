@@ -1,8 +1,5 @@
 <?php
-$user = require_login();
-if ($user["role"] === "admin") {
-    redirect("/admin/");
-}
+$user = require_member();
 $userId = (int) $user["id"];
 $room = chat_get_room($userId);
 $roomId = (int) $room["id"];
@@ -21,7 +18,9 @@ if (is_post()) {
         flash("error", "Kamu mengirim terlalu cepat. Tunggu sebentar.");
     } else {
         rate_hit($bucket);
-        chat_send($roomId, $userId, $text, true);
+        if (chat_send($roomId, $userId, $text, true, true)) {
+            flash("info", crisis_message() . " Tim akan membaca pesanmu secepatnya, tetapi balasan mungkin tidak langsung.");
+        }
     }
     redirect("/chat.php");
 }
@@ -31,14 +30,14 @@ $messages = chat_fetch($roomId);
 $lastId = $messages ? (int) end($messages)["id"] : 0;
 $room = chat_get_room($userId, false);
 
-page_header("Chat dukungan", ["active" => "chat"]);
+page_header("Chat dengan tim", ["active" => "support"]);
 ?>
 <div class="container narrow">
 
     <aside class="notice notice-info chat-privacy">
-        <strong>Percakapan ini bisa dibaca admin.</strong>
+        <strong>Percakapan ini bisa dibaca tim: admin dan konselor yang menangani permintaanmu.</strong>
         Jangan kirim password atau data pribadi yang sensitif. Kalau kamu dalam bahaya atau butuh bantuan segera,
-        hubungi <strong>112</strong> atau lihat <a class="link" href="/bantuan.php">layanan bantuan</a>. Admin bukan tenaga kesehatan jiwa.
+        hubungi <strong>112</strong> atau lihat <a class="link" href="/bantuan.php">layanan bantuan</a>. Admin bukan tenaga kesehatan jiwa dan balasan tidak selalu langsung.
     </aside>
 
     <section class="card chat-wrapper">

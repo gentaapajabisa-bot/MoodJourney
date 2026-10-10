@@ -1,8 +1,5 @@
 <?php
-$user = require_login();
-if ($user["role"] === "admin") {
-    redirect("/admin/");
-}
+$user = require_member();
 $userId = (int) $user["id"];
 
 $today = date("Y-m-d");

@@ -1,5 +1,5 @@
 <?php
-$user = require_login();
+$user = require_member();
 $userId = (int) $user["id"];
 
 $f = diary_filters($userId, $_GET);

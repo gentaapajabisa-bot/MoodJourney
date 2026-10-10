@@ -14,11 +14,24 @@ function unread_count_for(array $user): int
             0
         );
     }
+    if ($user["role"] === "counselor") {
+        return (int) db_value(
+            "SELECT COUNT(*) FROM messages m
+             JOIN users u ON u.id = m.sender_id
+             JOIN chat_rooms r ON r.id = m.chat_room_id
+             WHERE u.role = 'user' AND m.is_read = 0
+               AND EXISTS (SELECT 1 FROM support_requests sr
+                           WHERE sr.user_id = r.user_id AND sr.counselor_id = ? AND sr.status = 'active')",
+            "i",
+            [(int) $user["id"]],
+            0
+        );
+    }
     return (int) db_value(
         "SELECT COUNT(*) FROM messages m
          JOIN chat_rooms r ON r.id = m.chat_room_id
          JOIN users u ON u.id = m.sender_id
-         WHERE r.user_id = ? AND u.role = 'admin' AND m.is_read = 0",
+         WHERE r.user_id = ? AND u.role IN ('admin', 'counselor') AND m.is_read = 0",
         "i",
         [(int) $user["id"]],
         0
@@ -81,7 +94,7 @@ function page_header(string $title, array $opts = []): void
 
 <?php if ($nav !== "none"): ?>
 <nav class="navbar" aria-label="Navigasi utama">
-    <a href="<?= $user ? ($user["role"] === "admin" ? "/admin/" : "/dashboard.php") : "/" ?>" class="logo">
+    <a href="<?= $user ? h(home_for($user)) : "/" ?>" class="logo">
         Mood<span>Journey</span>
     </a>
 
@@ -92,8 +105,9 @@ function page_header(string $title, array $opts = []): void
             <a href="/dashboard.php" <?= $active === "dashboard" ? 'aria-current="page"' : "" ?>>Dashboard</a>
             <a href="/history.php" <?= $active === "history" ? 'aria-current="page"' : "" ?>>Riwayat</a>
             <a href="/statistics.php" <?= $active === "statistics" ? 'aria-current="page"' : "" ?>>Wawasan</a>
-            <a href="/chat.php" <?= $active === "chat" ? 'aria-current="page"' : "" ?>>
-                Chat<span class="badge" data-unread-badge <?= $unread > 0 ? "" : "hidden" ?>><?= $unread ?></span>
+            <a href="/tenang.php" <?= $active === "calm" ? 'aria-current="page"' : "" ?>>Tenang</a>
+            <a href="/dukungan.php" <?= $active === "support" ? 'aria-current="page"' : "" ?>>
+                Dukungan<span class="badge" data-unread-badge <?= $unread > 0 ? "" : "hidden" ?>><?= $unread ?></span>
             </a>
             <a href="/profile.php" <?= $active === "profile" ? 'aria-current="page"' : "" ?>>Profil</a>
             <a href="/diary.php" class="btn btn-small">Catat mood</a>
@@ -103,6 +117,12 @@ function page_header(string $title, array $opts = []): void
             </a>
             <a href="/profile.php" <?= $active === "profile" ? 'aria-current="page"' : "" ?>>Profil</a>
             <span class="admin-badge">Admin</span>
+        <?php elseif ($nav === "counselor" && $user): $unread = unread_count_for($user); ?>
+            <a href="/konselor/" <?= $active === "counselor" ? 'aria-current="page"' : "" ?>>Antrean
+                <span class="badge" data-unread-badge <?= $unread > 0 ? "" : "hidden" ?>><?= $unread ?></span>
+            </a>
+            <a href="/profile.php" <?= $active === "profile" ? 'aria-current="page"' : "" ?>>Profil</a>
+            <span class="admin-badge">Konselor</span>
         <?php elseif ($nav === "public"): ?>
             <a href="/login.php">Masuk</a>
             <a href="/register.php" class="btn btn-small">Daftar</a>
@@ -134,7 +154,7 @@ function page_header(string $title, array $opts = []): void
     endif;
 }
 
-function page_footer(): void
+function page_footer(array $scripts = []): void
 {
     ?>
 </main>
@@ -148,6 +168,9 @@ function page_footer(): void
 </footer>
 
 <script src="/assets/js/app.js" defer></script>
+<?php foreach ($scripts as $src): ?>
+<script src="<?= h($src) ?>" defer></script>
+<?php endforeach; ?>
 </body>
 </html>
 <?php
@@ -167,4 +190,13 @@ function insights_tabs(string $active): void
         echo '<a href="' . $href . '"' . ($key === $active ? ' aria-current="true"' : "") . '>' . h($label) . '</a>';
     }
     echo '</nav>';
+}
+
+/** Jenis navigasi sesuai peran pengguna (null = belum masuk). */
+function nav_for(?array $user): string
+{
+    if ($user === null) {
+        return "public";
+    }
+    return ["admin" => "admin", "counselor" => "counselor"][$user["role"]] ?? "app";
 }

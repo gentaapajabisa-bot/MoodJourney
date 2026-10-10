@@ -450,3 +450,163 @@ document.addEventListener("DOMContentLoaded", () => {
         card.addEventListener("click", () => card.classList.toggle("flipped"));
     });
 });
+
+/* ==========================================================
+   Asisten FAQ dan unggah foto
+   ========================================================== */
+document.addEventListener("DOMContentLoaded", () => {
+    /* 1. Widget asisten */
+    const bot = document.getElementById("bot");
+    if (bot) {
+        const endpoint = bot.dataset.endpoint;
+        const csrf = bot.dataset.csrf;
+        const list = document.getElementById("bot-messages");
+        const form = document.getElementById("bot-form");
+        const input = document.getElementById("bot-input");
+        let busy = false;
+
+        const scroll = () => { list.scrollTop = list.scrollHeight; };
+
+        const addMsg = (text, who) => {
+            const div = document.createElement("div");
+            div.className = "bot-msg " + who;
+            div.textContent = text;
+            list.appendChild(div);
+            scroll();
+            return div;
+        };
+
+        const addLinks = (links, crisis) => {
+            if (!links || !links.length) return;
+            const wrap = document.createElement("div");
+            wrap.className = "bot-links";
+            links.forEach(([label, href]) => {
+                if (typeof href !== "string" || !(href.startsWith("/") || href.startsWith("tel:"))) return;
+                const a = document.createElement("a");
+                a.className = "btn btn-small" + (crisis ? "" : " btn-outline");
+                a.href = href;
+                a.textContent = label;
+                wrap.appendChild(a);
+            });
+            list.appendChild(wrap);
+            scroll();
+        };
+
+        const ask = async (q) => {
+            if (busy || !q) return;
+            busy = true;
+            addMsg(q, "user");
+            const typing = addMsg("…", "bot typing");
+            try {
+                const fd = new FormData();
+                fd.append("_csrf", csrf);
+                fd.append("q", q);
+                const res = await fetch(endpoint, { method: "POST", body: fd, credentials: "same-origin" });
+                const data = await res.json();
+                typing.remove();
+                const msg = addMsg(data.reply || "Maaf, ada gangguan. Coba lagi.", "bot" + (data.crisis ? " crisis" : ""));
+                if (data.crisis) msg.setAttribute("role", "alert");
+                addLinks(data.links, !!data.crisis);
+            } catch (e) {
+                typing.remove();
+                addMsg("Maaf, asisten sedang tidak bisa dihubungi. Kamu bisa mengirim pesan lewat chat dengan tim.", "bot");
+                addLinks([["Chat dengan tim", "/chat.php"]], false);
+            } finally {
+                busy = false;
+            }
+        };
+
+        form.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const q = input.value.trim();
+            input.value = "";
+            ask(q);
+        });
+
+        document.querySelectorAll("[data-bot-q]").forEach((btn) =>
+            btn.addEventListener("click", () => ask(btn.dataset.botQ))
+        );
+    }
+
+    /* 2. Foto: dikecilkan di browser (metadata lokasi/EXIF otomatis hilang) */
+    const photoInput = document.getElementById("photo-input");
+    if (photoInput) {
+        const preview = document.getElementById("photo-preview");
+        const previewImg = document.getElementById("photo-preview-img");
+        const clearBtn = document.getElementById("photo-clear");
+        const status = document.getElementById("photo-status");
+        const MAX_SIDE = 1280;
+        let objectUrl = null;
+
+        const reset = () => {
+            if (objectUrl) { URL.revokeObjectURL(objectUrl); objectUrl = null; }
+            preview.hidden = true;
+        };
+
+        const loadBitmap = async (file) => {
+            if (window.createImageBitmap) {
+                try { return await createImageBitmap(file, { imageOrientation: "from-image" }); } catch (e) { /* lanjut ke Image */ }
+            }
+            return new Promise((resolve, reject) => {
+                const url = URL.createObjectURL(file);
+                const img = new Image();
+                img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+                img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("decode")); };
+                img.src = url;
+            });
+        };
+
+        const toBlob = (canvas, quality) => new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
+
+        photoInput.addEventListener("change", async () => {
+            const file = photoInput.files && photoInput.files[0];
+            reset();
+            if (!file) { status.textContent = ""; return; }
+
+            if (!file.type.startsWith("image/")) {
+                status.textContent = "File harus berupa foto.";
+                photoInput.value = "";
+                return;
+            }
+
+            status.textContent = "Memproses foto…";
+            try {
+                const bmp = await loadBitmap(file);
+                const w = bmp.width || bmp.naturalWidth;
+                const h = bmp.height || bmp.naturalHeight;
+                const ratio = Math.min(1, MAX_SIDE / Math.max(w, h));
+                const canvas = document.createElement("canvas");
+                canvas.width = Math.max(1, Math.round(w * ratio));
+                canvas.height = Math.max(1, Math.round(h * ratio));
+                const ctx2d = canvas.getContext("2d");
+                ctx2d.fillStyle = "#ffffff"; // latar putih untuk PNG transparan
+                ctx2d.fillRect(0, 0, canvas.width, canvas.height);
+                ctx2d.drawImage(bmp, 0, 0, canvas.width, canvas.height);
+                if (bmp.close) bmp.close();
+
+                let blob = await toBlob(canvas, 0.82);
+                if (blob && blob.size > 1400000) blob = await toBlob(canvas, 0.6);
+                if (!blob || blob.size > 1450000) throw new Error("terlalu besar");
+
+                const out = new File([blob], "foto.jpg", { type: "image/jpeg" });
+                const dt = new DataTransfer();
+                dt.items.add(out);
+                photoInput.files = dt.files;
+
+                objectUrl = URL.createObjectURL(blob);
+                previewImg.src = objectUrl;
+                preview.hidden = false;
+                status.textContent = "Siap diunggah (" + Math.max(1, Math.round(blob.size / 1024)) + " KB).";
+            } catch (e) {
+                status.textContent = "Foto tidak bisa diproses. Coba format JPG atau PNG yang lebih kecil.";
+                photoInput.value = "";
+            }
+        });
+
+        clearBtn.addEventListener("click", () => {
+            photoInput.value = "";
+            reset();
+            status.textContent = "";
+        });
+    }
+});

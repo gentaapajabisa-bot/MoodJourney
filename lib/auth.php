@@ -50,6 +50,26 @@ function redirect_if_logged_in(): void
 {
     $user = current_user();
     if ($user !== null) {
-        redirect($user["role"] === "admin" ? "/admin/" : "/dashboard.php");
+        redirect(home_for($user));
     }
+}
+
+/** Admin atau konselor. */
+function require_staff(): array
+{
+    $user = require_login();
+    if (!is_staff($user["role"])) {
+        redirect("/dashboard.php");
+    }
+    return $user;
+}
+
+/** Halaman khusus pengguna biasa: staf diarahkan ke halamannya sendiri. */
+function require_member(): array
+{
+    $user = require_login();
+    if ($user["role"] !== "user") {
+        redirect(home_for($user));
+    }
+    return $user;
 }

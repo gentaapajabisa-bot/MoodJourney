@@ -1,7 +1,7 @@
 <?php
 $user = current_user();
 if ($user) {
-    redirect($user["role"] === "admin" ? "/admin/" : "/dashboard.php");
+    redirect(home_for($user));
 }
 page_header("Mood Diary", ["nav" => "public", "desc" => "Ruang sederhana untuk mencatat perasaan, aktivitas, dan cerita harianmu."]);
 ?>

@@ -13,6 +13,14 @@ Mood diary berbasis PHP + MySQL/TiDB yang berjalan di Vercel.
 - **Keamanan**: proteksi CSRF, pembatasan percobaan login, escape output, header keamanan, password minimal 8 karakter
 - **Lainnya**: mode gelap, halaman Bantuan (layanan darurat) dan Privasi, zona waktu WIB
 
+## Dukungan, ruang tenang, dan foto
+- **Halaman Dukungan**: asisten FAQ berbasis aturan (bukan AI, percakapan tidak disimpan), chat dengan tim, dan permintaan bicara dengan **konselor**.
+- **Peran konselor**: dibuat admin di panel admin (konselor membuat passwordnya sendiri lewat tautan sekali pakai). Konselor hanya melihat percakapan pengguna yang ia ambil atau yang ditugaskan admin, dan tidak melihat diary maupun foto.
+- **Pengaman krisis**: deteksi kata kunci berbasis aturan tetap di asisten, chat, permintaan konselor, dan catatan diary. Pengguna langsung melihat 112 dan Healing119 (119 ext 8); pesan chat yang terdeteksi ditandai "Perlu perhatian" untuk staf. Daftar kata ada di `lib/safety.php` dan sebaiknya ditinjau berkala.
+- **Ruang tenang**: suara hujan, ombak, angin, dengung, dan mangkuk yang dibuat di browser dengan Web Audio (tanpa file audio), timer dengan fade-out, dan pemandu napas.
+- **Foto pada catatan**: satu foto per catatan, dikecilkan di browser (EXIF/lokasi hilang), disimpan di database (MEDIUMBLOB), hanya bisa dilihat pemiliknya. Batas 1,5 MB per foto dan 150 foto per pengguna. Foto tidak ikut ekspor CSV.
+- Variabel opsional `COUNSELOR_HOURS` menampilkan jam layanan konselor.
+
 ## Wawasan, target, dan pengingat
 - **Pencapaian**: 9 badge (jumlah catatan, streak, variasi aktivitas, target tercapai) dengan kartu yang bisa dibalik. Dihitung otomatis, termasuk dari data lama.
 - **Ringkasan mingguan**: rangkuman Senin–Minggu, perbandingan dengan minggu sebelumnya, hari terbaik/terberat, aktivitas teratas. Bisa dilihat per minggu.
@@ -62,4 +70,3 @@ Opsional:
 - Skema tidak memakai FOREIGN KEY (kompatibel dengan TiDB); penghapusan data terkait dilakukan oleh aplikasi.
 - Nomor layanan di halaman Bantuan (Healing119.id: 119 ext 8, Halo Kemenkes 1500-567, darurat 112) bisa berubah. Periksa berkala.
 - Aplikasi ini bukan alat diagnosis maupun pengganti layanan kesehatan jiwa.
-# MoodJourney

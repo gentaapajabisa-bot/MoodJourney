@@ -1,9 +1,12 @@
 <?php
-$admin = require_admin();
+$admin = require_staff();
 $adminId = (int) $admin["id"];
+$isAdmin = $admin["role"] === "admin";
+$self = $isAdmin ? "/admin/chat.php" : "/konselor/chat.php";
+$backUrl = $isAdmin ? "/admin/" : "/konselor/";
 
 $roomId = (int) ($_GET["room"] ?? $_POST["room"] ?? 0);
-$room = $roomId > 0
+$room = ($roomId > 0 && staff_can_access_room($admin, $roomId))
     ? db_one(
         "SELECT r.id, r.status, u.name, u.email FROM chat_rooms r JOIN users u ON u.id = r.user_id WHERE r.id = ? LIMIT 1",
         "i",
@@ -12,12 +15,12 @@ $room = $roomId > 0
     : null;
 
 if (!$room) {
-    flash("error", "Percakapan tidak ditemukan.");
-    redirect("/admin/");
+    flash("error", "Percakapan tidak ditemukan atau bukan tanggung jawabmu.");
+    redirect($backUrl);
 }
 
 if (is_post()) {
-    csrf_verify("/admin/chat.php?room=" . $roomId);
+    csrf_verify($self . "?room=" . $roomId);
 
     if (($_POST["action"] ?? "") === "status") {
         $new = $room["status"] === "closed" ? "open" : "closed";
@@ -31,18 +34,18 @@ if (is_post()) {
             flash("error", "Pesan terlalu panjang (maksimal " . CHAT_MAX_LENGTH . " karakter).");
         }
     }
-    redirect("/admin/chat.php?room=" . $roomId);
+    redirect($self . "?room=" . $roomId);
 }
 
 chat_mark_read($roomId, "admin");
 $messages = chat_fetch($roomId);
 $lastId = $messages ? (int) end($messages)["id"] : 0;
 
-page_header("Chat — " . $room["name"], ["nav" => "admin", "active" => "admin"]);
+page_header("Chat — " . $room["name"], ["nav" => nav_for($admin), "active" => $isAdmin ? "admin" : "counselor"]);
 ?>
 <div class="container narrow">
 
-    <p><a class="link" href="/admin/">← Kembali ke panel admin</a></p>
+    <p><a class="link" href="<?= h($backUrl) ?>">← <?= $isAdmin ? "Kembali ke panel admin" : "Kembali ke antrean" ?></a></p>
 
     <section class="card chat-wrapper">
 

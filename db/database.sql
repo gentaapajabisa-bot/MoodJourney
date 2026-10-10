@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
     name VARCHAR(100) NOT NULL,
     email VARCHAR(150) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
-    role ENUM('user','admin') NOT NULL DEFAULT 'user',
+    role ENUM('user','admin','counselor') NOT NULL DEFAULT 'user',
     bio TEXT NULL,
     is_active TINYINT(1) NOT NULL DEFAULT 1,
     last_login_at DATETIME NULL,
@@ -52,6 +52,7 @@ CREATE TABLE IF NOT EXISTS messages (
     sender_id INT NOT NULL,
     message TEXT NOT NULL,
     is_read TINYINT(1) NOT NULL DEFAULT 0,
+    flagged TINYINT(1) NOT NULL DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_msg_room (chat_room_id),
     INDEX idx_msg_sender (sender_id)
@@ -101,6 +102,33 @@ CREATE TABLE IF NOT EXISTS goals (
     INDEX idx_goals_user (user_id)
 ) ENGINE=InnoDB;
 
+CREATE TABLE IF NOT EXISTS diary_photos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    diary_id INT NOT NULL,
+    user_id INT NOT NULL,
+    mime VARCHAR(30) NOT NULL,
+    size INT NOT NULL,
+    data MEDIUMBLOB NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_photo_diary (diary_id),
+    INDEX idx_photo_user (user_id)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS support_requests (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    topic VARCHAR(60) NOT NULL,
+    message TEXT NULL,
+    status ENUM('waiting','active','done','cancelled') NOT NULL DEFAULT 'waiting',
+    counselor_id INT NULL,
+    urgent TINYINT(1) NOT NULL DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NULL,
+    INDEX idx_sr_user (user_id),
+    INDEX idx_sr_status (status),
+    INDEX idx_sr_counselor (counselor_id)
+) ENGINE=InnoDB;
+
 -- Akun admin awal. PASSWORD BAWAAN: admin123 -> WAJIB diganti setelah login pertama
 -- (panel admin akan menampilkan peringatan selama password ini belum diubah).
 INSERT INTO users (name, email, password, role)
@@ -108,4 +136,4 @@ SELECT 'Admin MoodJourney', 'admin@moodjourney.test',
        '$2y$10$9gTRGTvMdfwTvkaTCqULaeXgCz3EGiTKkZcMWrwgCSbUjJhBHpb7y', 'admin'
 WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = 'admin@moodjourney.test');
 
-REPLACE INTO app_meta (k, v) VALUES ('schema_version', '3');
+REPLACE INTO app_meta (k, v) VALUES ('schema_version', '4');

@@ -1,5 +1,5 @@
 <?php
-$user = require_login();
+$user = require_member();
 $userId = (int) $user["id"];
 
 $id = (int) ($_GET["id"] ?? $_POST["id"] ?? 0);
@@ -15,6 +15,15 @@ if ($id > 0) {
 
 $today = date("Y-m-d");
 $errors = [];
+
+$existingPhotoId = null;
+if ($entry) {
+    $existingPhotoId = db_value(
+        "SELECT id FROM diary_photos WHERE diary_id = ? AND user_id = ? LIMIT 1",
+        "ii",
+        [$id, $userId]
+    );
+}
 
 $form = [
     "mood"      => $entry["mood"] ?? "🙂",
@@ -53,6 +62,15 @@ if (is_post()) {
         $errors[] = "Cerita maksimal 3000 karakter.";
     }
 
+    $photo = photo_read_upload();
+    if ($photo !== null && isset($photo["error"])) {
+        $errors[] = $photo["error"];
+        $photo = null;
+    } elseif ($photo !== null && !$existingPhotoId && photo_count($userId) >= PHOTO_MAX_PER_USER) {
+        $errors[] = "Batas jumlah foto tercapai. Hapus beberapa foto lama dulu.";
+        $photo = null;
+    }
+
     if (!$errors) {
         $tags = implode(",", $form["tags"]);
         if ($entry) {
@@ -62,15 +80,27 @@ if (is_post()) {
                 "sissssii",
                 [$form["mood"], $form["intensity"], $tags, $form["activity"], $form["note"], $form["date"], $id, $userId]
             );
+            $savedId = $id;
             flash("success", "Catatan diperbarui.");
         } else {
-            db_exec(
+            [, $savedId] = db_exec(
                 "INSERT INTO diary (user_id, mood, intensity, tags, activity, note, diary_date)
                  VALUES (?, ?, ?, ?, ?, ?, ?)",
                 "isissss",
                 [$userId, $form["mood"], $form["intensity"], $tags, $form["activity"], $form["note"], $form["date"]]
             );
             flash("success", "Catatan tersimpan.");
+        }
+
+        if ($photo !== null) {
+            photo_save($userId, (int) $savedId, $photo);
+        } elseif ($entry && !empty($_POST["remove_photo"])) {
+            photo_delete_for_diary($userId, (int) $savedId);
+        }
+
+        // tanda krisis di cerita: tampilkan dukungan dengan lembut (tidak ada yang dikirim ke staf)
+        if (crisis_detect($form["note"] . " " . $form["activity"])) {
+            flash("info", crisis_message() . " Kamu juga bisa mengajukan bicara dengan konselor di halaman Dukungan.");
         }
 
         $newAchievements = check_achievements($userId);
@@ -95,7 +125,7 @@ page_header($entry ? "Ubah catatan" : "Catat mood", ["active" => "diary"]);
             </div>
         <?php endif; ?>
 
-        <form method="POST" class="diary-form">
+        <form method="POST" class="diary-form" enctype="multipart/form-data">
             <?= csrf_field() ?>
             <?php if ($entry): ?><input type="hidden" name="id" value="<?= $id ?>"><?php endif; ?>
 
@@ -154,6 +184,30 @@ page_header($entry ? "Ubah catatan" : "Catat mood", ["active" => "diary"]);
                           placeholder="Hari ini aku..." data-counter="note-count"><?= h($form["note"]) ?></textarea>
                 <small class="muted"><span id="note-count">0</span>/3000</small>
             </div>
+
+            <fieldset class="form-group photo-field">
+                <legend>Foto <span class="muted">(opsional, satu per catatan)</span></legend>
+
+                <?php if ($existingPhotoId): ?>
+                    <div class="photo-current">
+                        <img src="/photo.php?id=<?= (int) $existingPhotoId ?>" alt="Foto catatan saat ini" loading="lazy">
+                        <label class="check-row">
+                            <input type="checkbox" name="remove_photo" value="1">
+                            <span>Hapus foto ini</span>
+                        </label>
+                    </div>
+                <?php endif; ?>
+
+                <input class="form-control" type="file" id="photo-input" name="photo" accept="image/jpeg,image/png,image/webp,image/*"
+                       aria-describedby="photo-hint">
+                <small id="photo-hint" class="muted block">Foto dikecilkan otomatis di perangkatmu dan hanya bisa dilihat olehmu.
+                    <?= $existingPhotoId ? "Memilih foto baru akan mengganti yang lama." : "" ?></small>
+                <div class="photo-preview" id="photo-preview" hidden>
+                    <img id="photo-preview-img" alt="Pratinjau foto yang dipilih">
+                    <button type="button" class="btn btn-outline btn-small" id="photo-clear">Batal pilih foto</button>
+                </div>
+                <p class="muted" id="photo-status" aria-live="polite"></p>
+            </fieldset>
 
             <div class="form-group">
                 <label for="date">Tanggal</label>

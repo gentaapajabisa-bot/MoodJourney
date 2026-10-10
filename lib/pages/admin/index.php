@@ -73,14 +73,33 @@ $users = db_all(
     array_merge($params, [$perPage, ($page - 1) * $perPage])
 );
 
+/* Konselor dan permintaan dukungan */
+$counselors = db_all(
+    "SELECT u.id, u.name, u.email, u.is_active, u.last_login_at,
+            (SELECT COUNT(*) FROM support_requests sr WHERE sr.counselor_id = u.id AND sr.status = 'active') AS active_count
+     FROM users u WHERE u.role = 'counselor' ORDER BY u.created_at DESC"
+);
+$activeCounselors = array_values(array_filter($counselors, fn($c) => (int) $c["is_active"] === 1));
+$supportRequests = db_all(
+    "SELECT sr.id, sr.topic, sr.status, sr.urgent, sr.created_at, sr.counselor_id,
+            u.name AS user_name, c.name AS counselor_name
+     FROM support_requests sr
+     JOIN users u ON u.id = sr.user_id
+     LEFT JOIN users c ON c.id = sr.counselor_id
+     WHERE sr.status IN ('waiting', 'active')
+     ORDER BY sr.urgent DESC, sr.created_at ASC LIMIT 50"
+);
+
 /* Chat */
 $rooms = db_all(
     "SELECT r.id, r.status, r.last_message_at, u.name, u.email,
             (SELECT COUNT(*) FROM messages m JOIN users s ON s.id = m.sender_id
-             WHERE m.chat_room_id = r.id AND s.role = 'user' AND m.is_read = 0) AS unread
+             WHERE m.chat_room_id = r.id AND s.role = 'user' AND m.is_read = 0) AS unread,
+            (SELECT COUNT(*) FROM messages m JOIN users s ON s.id = m.sender_id
+             WHERE m.chat_room_id = r.id AND s.role = 'user' AND m.is_read = 0 AND m.flagged = 1) AS flagged
      FROM chat_rooms r JOIN users u ON u.id = r.user_id
      WHERE r.last_message_at IS NOT NULL
-     ORDER BY unread DESC, r.last_message_at DESC, r.id DESC LIMIT 100"
+     ORDER BY flagged DESC, unread DESC, r.last_message_at DESC, r.id DESC LIMIT 100"
 );
 
 page_header("Admin", ["nav" => "admin", "active" => "admin"]);
@@ -172,6 +191,109 @@ page_header("Admin", ["nav" => "admin", "active" => "admin"]);
     </section>
     <?php endif; ?>
 
+    <section class="card" id="konselor">
+        <h2>Permintaan bicara dengan konselor</h2>
+        <?php if (!$activeCounselors): ?>
+            <div class="notice notice-info">Belum ada konselor aktif. Tambahkan akun konselor di bawah supaya fitur ini bisa dipakai pengguna.</div>
+        <?php endif; ?>
+        <?php if (!$supportRequests): ?>
+            <div class="empty">Tidak ada permintaan yang berjalan.</div>
+        <?php else: ?>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Pengguna</th><th>Topik</th><th>Status</th><th>Ditangani</th><th>Aksi</th></tr></thead>
+                <tbody>
+                <?php foreach ($supportRequests as $sr): ?>
+                    <tr>
+                        <td><?= h($sr["user_name"]) ?><?= (int) $sr["urgent"] === 1 ? ' <span class="msg-flag">⚠ Perlu perhatian</span>' : "" ?></td>
+                        <td><?= h($sr["topic"]) ?><br><span class="muted"><?= h(date("j M, H:i", strtotime($sr["created_at"]))) ?></span></td>
+                        <td><span class="admin-badge <?= $sr["status"] === "waiting" ? "is-muted" : "" ?>"><?= $sr["status"] === "waiting" ? "Menunggu" : "Aktif" ?></span></td>
+                        <td><?= h($sr["counselor_name"] ?? "–") ?></td>
+                        <td class="row-actions">
+                            <?php if ($activeCounselors): ?>
+                            <form method="POST" action="/support/action.php" class="inline-form">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="action" value="assign">
+                                <input type="hidden" name="request_id" value="<?= (int) $sr["id"] ?>">
+                                <label class="sr-only" for="c<?= (int) $sr["id"] ?>">Pilih konselor</label>
+                                <select class="form-control select-small" id="c<?= (int) $sr["id"] ?>" name="counselor_id">
+                                    <?php foreach ($activeCounselors as $c): ?>
+                                        <option value="<?= (int) $c["id"] ?>" <?= (int) $c["id"] === (int) $sr["counselor_id"] ? "selected" : "" ?>><?= h($c["name"]) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <button class="btn btn-outline btn-small" type="submit">Tugaskan</button>
+                            </form>
+                            <?php endif; ?>
+                            <?php if ($sr["status"] === "active"): ?>
+                            <form method="POST" action="/support/action.php" data-confirm="Tandai permintaan ini selesai?">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="action" value="done">
+                                <input type="hidden" name="request_id" value="<?= (int) $sr["id"] ?>">
+                                <button class="btn btn-outline btn-small" type="submit">Selesai</button>
+                            </form>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        <?php endif; ?>
+    </section>
+
+    <section class="card">
+        <h2>Konselor (<?= count($counselors) ?>)</h2>
+        <p class="muted">Konselor hanya bisa membuka percakapan pengguna yang permintaannya ia ambil atau yang kamu tugaskan kepadanya.</p>
+
+        <?php if ($counselors): ?>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Konselor</th><th>Terakhir masuk</th><th>Aktif ditangani</th><th>Status</th><th>Aksi</th></tr></thead>
+                <tbody>
+                <?php foreach ($counselors as $c): $cActive = (int) $c["is_active"] === 1; ?>
+                    <tr>
+                        <td><?= h($c["name"]) ?><br><span class="muted"><?= h($c["email"]) ?></span></td>
+                        <td><?= $c["last_login_at"] ? h(date_id($c["last_login_at"])) : "Belum pernah" ?></td>
+                        <td><?= (int) $c["active_count"] ?></td>
+                        <td><span class="admin-badge <?= $cActive ? "" : "is-muted" ?>"><?= $cActive ? "Aktif" : "Nonaktif" ?></span></td>
+                        <td class="row-actions">
+                            <form method="POST" action="/admin/user.php">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="action" value="toggle_active">
+                                <input type="hidden" name="user_id" value="<?= (int) $c["id"] ?>">
+                                <button class="btn btn-outline btn-small" type="submit"><?= $cActive ? "Nonaktifkan" : "Aktifkan" ?></button>
+                            </form>
+                            <form method="POST" action="/admin/user.php">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="action" value="reset_link">
+                                <input type="hidden" name="user_id" value="<?= (int) $c["id"] ?>">
+                                <button class="btn btn-outline btn-small" type="submit">Tautan reset</button>
+                            </form>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        <?php endif; ?>
+
+        <h3 class="subhead">Tambah konselor</h3>
+        <form method="POST" action="/admin/user.php" class="counselor-form">
+            <?= csrf_field() ?>
+            <input type="hidden" name="action" value="create_counselor">
+            <div class="form-group">
+                <label for="cname">Nama</label>
+                <input class="form-control" type="text" id="cname" name="name" maxlength="100" required>
+            </div>
+            <div class="form-group">
+                <label for="cemail">Email</label>
+                <input class="form-control" type="email" id="cemail" name="email" maxlength="150" required>
+            </div>
+            <button class="btn" type="submit">Buat akun konselor</button>
+            <p class="muted">Kamu akan mendapat tautan sekali pakai agar konselor membuat passwordnya sendiri. Pastikan ia memang tenaga yang terlatih.</p>
+        </form>
+    </section>
+
     <section class="card">
         <h2>Chat pengguna</h2>
         <?php if (!$rooms): ?>
@@ -186,7 +308,8 @@ page_header("Admin", ["nav" => "admin", "active" => "admin"]);
                         <td><?= h($room["name"]) ?><br><span class="muted"><?= h($room["email"]) ?></span></td>
                         <td><span class="admin-badge <?= $room["status"] === "closed" ? "is-muted" : "" ?>"><?= $room["status"] === "closed" ? "Selesai" : "Terbuka" ?></span></td>
                         <td><?= h(date("j M, H:i", strtotime($room["last_message_at"]))) ?></td>
-                        <td><?= (int) $room["unread"] > 0 ? '<span class="badge">' . (int) $room["unread"] . "</span>" : "–" ?></td>
+                        <td><?= (int) $room["unread"] > 0 ? '<span class="badge">' . (int) $room["unread"] . "</span>" : "–" ?>
+                            <?= (int) $room["flagged"] > 0 ? '<span class="msg-flag">⚠ Perlu perhatian</span>' : "" ?></td>
                         <td><a class="btn btn-small" href="/admin/chat.php?room=<?= (int) $room["id"] ?>">Buka</a></td>
                     </tr>
                 <?php endforeach; ?>

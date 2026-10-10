@@ -1,5 +1,5 @@
 <?php
-$user = require_login();
+$user = require_member();
 $userId = (int) $user["id"];
 
 $ranges = [7 => "7 hari", 30 => "30 hari", 90 => "90 hari", 365 => "1 tahun"];

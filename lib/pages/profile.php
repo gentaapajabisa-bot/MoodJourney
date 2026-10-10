@@ -1,7 +1,7 @@
 <?php
 $user = require_login();
 $userId = (int) $user["id"];
-$isAdmin = $user["role"] === "admin";
+$isAdmin = $user["role"] !== "user"; // admin dan konselor: tanpa fitur diary
 
 if (is_post()) {
     csrf_verify("/profile.php");
@@ -84,7 +84,7 @@ $stats = db_one(
     [$userId]
 );
 
-page_header("Profil", ["nav" => $isAdmin ? "admin" : "app", "active" => "profile"]);
+page_header("Profil", ["nav" => nav_for($user), "active" => "profile"]);
 ?>
 <div class="container narrow">
 

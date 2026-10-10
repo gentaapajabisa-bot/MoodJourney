@@ -1,5 +1,5 @@
 <?php
-$user = require_login();
+$user = require_member();
 $userId = (int) $user["id"];
 
 $f = diary_filters($userId, $_GET);
@@ -16,6 +16,8 @@ $entries = db_all(
     $f["types"] . "ii",
     array_merge($f["params"], [$perPage, $offset])
 );
+
+attach_photo_ids($entries, $userId);
 
 $hasFilter = array_filter($filters, fn($v) => $v !== "") !== [];
 $self = "/history.php";

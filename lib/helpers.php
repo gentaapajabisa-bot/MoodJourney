@@ -243,6 +243,8 @@ function delete_user_data(int $userId): void
         db_exec("DELETE FROM diary WHERE user_id = ?", "i", [$userId]);
         db_exec("DELETE FROM password_resets WHERE user_id = ?", "i", [$userId]);
         db_exec("DELETE FROM achievements WHERE user_id = ?", "i", [$userId]);
+        db_exec("DELETE FROM diary_photos WHERE user_id = ?", "i", [$userId]);
+        db_exec("DELETE FROM support_requests WHERE user_id = ?", "i", [$userId]);
         db_exec("DELETE FROM goals WHERE user_id = ?", "i", [$userId]);
         db_exec("DELETE FROM users WHERE id = ?", "i", [$userId]);
         $db->commit();
@@ -270,4 +272,22 @@ function week_label(string $weekStart): string
 {
     $end = week_end($weekStart);
     return short_date($weekStart) . " – " . short_date($end) . " " . date("Y", strtotime($end));
+}
+
+/** Admin dan konselor dianggap staf. */
+function is_staff(string $role): bool
+{
+    return $role === "admin" || $role === "counselor";
+}
+
+/** Halaman awal sesuai peran. */
+function home_for(array $user): string
+{
+    if ($user["role"] === "admin") {
+        return "/admin/";
+    }
+    if ($user["role"] === "counselor") {
+        return "/konselor/";
+    }
+    return "/dashboard.php";
 }

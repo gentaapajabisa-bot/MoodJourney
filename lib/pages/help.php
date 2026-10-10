@@ -1,6 +1,6 @@
 <?php
 $user = current_user();
-page_header("Bantuan", ["nav" => $user ? ($user["role"] === "admin" ? "admin" : "app") : "public"]);
+page_header("Bantuan", ["nav" => nav_for($user)]);
 ?>
 <div class="container narrow">
 
@@ -61,7 +61,7 @@ page_header("Bantuan", ["nav" => $user ? ($user["role"] === "admin" ? "admin" : 
         <h2>Masalah dengan aplikasi?</h2>
         <p class="muted">
             Soal akun, password, atau fitur, kamu bisa
-            <?= $user && $user["role"] !== "admin" ? '<a class="link" href="/chat.php">chat dengan admin</a>' : '<a class="link" href="/forgot.php">atur ulang password</a> atau hubungi admin' ?>.
+            <?= $user && $user["role"] === "user" ? '<a class="link" href="/dukungan.php">membuka halaman Dukungan</a> (asisten, chat dengan tim, atau permintaan bicara dengan konselor)' : '<a class="link" href="/forgot.php">atur ulang password</a> atau hubungi admin' ?>.
             Admin bukan tenaga kesehatan jiwa.
         </p>
     </section>

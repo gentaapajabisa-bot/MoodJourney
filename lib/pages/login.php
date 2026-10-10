@@ -41,7 +41,7 @@ if (is_post()) {
                 rate_clear($mailBucket);
                 db_exec("UPDATE users SET last_login_at = NOW() WHERE id = ?", "i", [(int) $user["id"]]);
 
-                redirect($user["role"] === "admin" ? "/admin/" : "/dashboard.php");
+                redirect(home_for(["role" => $user["role"]]));
             }
         } else {
             rate_hit($ipBucket);
