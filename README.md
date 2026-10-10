@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # MoodJourney (versi Vercel) — upgrade
 
 Mood diary berbasis PHP + MySQL/TiDB yang berjalan di Vercel.
@@ -63,6 +62,4 @@ Opsional:
 - Skema tidak memakai FOREIGN KEY (kompatibel dengan TiDB); penghapusan data terkait dilakukan oleh aplikasi.
 - Nomor layanan di halaman Bantuan (Healing119.id: 119 ext 8, Halo Kemenkes 1500-567, darurat 112) bisa berubah. Periksa berkala.
 - Aplikasi ini bukan alat diagnosis maupun pengganti layanan kesehatan jiwa.
-=======
 # MoodJourney
->>>>>>> 80cd38ee2f80e5f308e8a0ea7bfbe04c80de80cd
