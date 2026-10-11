@@ -29,4 +29,4 @@ if (rate_count($bucket, 60) >= 20) {
 rate_hit($bucket);
 
 $q = mb_substr(trim((string) ($_POST["q"] ?? "")), 0, 300);
-echo json_encode(bot_answer($q), JSON_UNESCAPED_UNICODE);
+echo json_encode(bot_answer($q, (int) $user["id"]), JSON_UNESCAPED_UNICODE);

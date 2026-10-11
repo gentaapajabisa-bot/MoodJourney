@@ -2852,3 +2852,16 @@ th {
         animation: none !important;
     }
 }
+
+/* ---------- Asisten: langkah bernomor & label AI ---------- */
+
+.bot-msg {
+    white-space: pre-line;
+}
+
+.bot-ai-note {
+    display: block;
+    margin-top: 8px;
+    font-size: 12px;
+    opacity: 0.7;
+}

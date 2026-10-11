@@ -506,6 +506,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 typing.remove();
                 const msg = addMsg(data.reply || "Maaf, ada gangguan. Coba lagi.", "bot" + (data.crisis ? " crisis" : ""));
                 if (data.crisis) msg.setAttribute("role", "alert");
+                if (data.ai) {
+                    const note = document.createElement("small");
+                    note.className = "bot-ai-note";
+                    note.textContent = "Dijawab AI, bisa keliru.";
+                    msg.appendChild(note);
+                }
                 addLinks(data.links, !!data.crisis);
             } catch (e) {
                 typing.remove();

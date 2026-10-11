@@ -44,8 +44,8 @@ const BOT_KB = [
         "id" => "streak",
         "q" => "Apa itu streak?",
         "keys" => ["streak", "beruntun", "berturut"],
-        "a" => "Streak adalah jumlah hari berturut-turut kamu mencatat mood. Kalau satu hari terlewat, hitungannya mulai lagi, tapi streak terpanjangmu tetap tersimpan. Tidak perlu dikejar sampai tertekan. Mencatat sesekali pun tetap berguna.",
-        "links" => [],
+        "a" => "Streak adalah jumlah hari berturut-turut kamu mencatat mood. Selain itu ada \"Perjalanan kupu-kupu\" yang lebih ramah: satu hari terlewat per minggu dimaafkan, dan kalau terlewat lagi, perjalananmu hanya turun separuh, bukan kembali ke nol. Tidak perlu dikejar sampai tertekan. Mencatat sesekali pun tetap berguna.",
+        "links" => [["Lihat metamorfosis", "/metamorfosis.php"]],
     ],
     [
         "id" => "target",
@@ -117,10 +117,45 @@ const BOT_KB = [
         "a" => "Untuk soal aplikasi, kirim pesan lewat chat dengan tim. Kalau kamu ingin bicara dengan konselor, ajukan permintaan di bagian \"Bicara dengan konselor\" pada halaman Dukungan. Permintaanmu akan ditangani sesuai jam layanan, jadi balasan mungkin tidak langsung.",
         "links" => [["Chat dengan tim", "/chat.php"], ["Ajukan konselor", "/dukungan.php#konselor"]],
     ],
+    [
+        "id" => "panduan",
+        "q" => "Bagaimana cara memakai MoodJourney dari awal?",
+        "keys" => ["panduan", "tata cara", "cara pakai", "cara menggunakan", "cara memakai", "mulai dari mana", "tutorial", "langkah langkah", "langkah-langkah", "fitur apa saja", "cara kerja"],
+        "a" => "Langkah singkat memakai MoodJourney:\n1. Daftar dan masuk ke akunmu.\n2. Klik \"Catat mood\", pilih emoji, geser kekuatan perasaan, tandai aktivitas, lalu simpan.\n3. Lihat ringkasannya di Dashboard.\n4. Buka Riwayat untuk mencari atau mengunduh catatan.\n5. Buka Wawasan untuk statistik, target, pencapaian, dan metamorfosis kupu-kupu.\n6. Butuh jeda? Coba ruang Tenang. Butuh bicara? Buka Dukungan.\nTanya saja kalau mau penjelasan detail tiap langkah.",
+        "links" => [["Catat mood", "/diary.php"], ["Wawasan", "/statistics.php"], ["Ruang tenang", "/tenang.php"]],
+    ],
+    [
+        "id" => "daftar",
+        "q" => "Bagaimana cara daftar dan masuk?",
+        "keys" => ["cara daftar", "daftar akun", "buat akun", "cara login", "cara masuk", "registrasi", "register", "sign up"],
+        "a" => "Cara daftar:\n1. Buka halaman Daftar.\n2. Isi nama, email, dan password.\n3. Klik Daftar.\nSetelah itu masuk lewat halaman Masuk dengan email dan password yang sama. Kalau lupa password, klik \"Lupa password?\" di halaman Masuk.",
+        "links" => [["Daftar", "/register.php"], ["Masuk", "/login.php"]],
+    ],
+    [
+        "id" => "riwayat",
+        "q" => "Bagaimana mencari atau memfilter catatan lama?",
+        "keys" => ["riwayat", "filter", "cari catatan", "pencarian", "catatan lama", "cari mood"],
+        "a" => "Cara mencari catatan lama:\n1. Buka menu Riwayat.\n2. Ketik kata di kolom Cari, atau pilih Mood, Aktivitas, dan rentang tanggal.\n3. Klik \"Terapkan filter\".\nDi tiap catatan ada tombol Ubah dan Hapus. Tombol Unduh CSV dan Cetak / PDF mengikuti filter yang sedang aktif.",
+        "links" => [["Buka riwayat", "/history.php"]],
+    ],
+    [
+        "id" => "metamorfosis",
+        "q" => "Apa itu metamorfosis kupu-kupu?",
+        "keys" => ["kupu", "metamorfosis", "kepompong", "ulat", "telur", "sayap", "perjalananmu"],
+        "a" => "Metamorfosis adalah streak versi lembut. Setiap hari yang kamu catat menambah satu hari perjalanan: Telur (0-2 hari), Ulat (3-6), Kepompong (7-13), Kupu-kupu muda (14-29), lalu Kupu-kupu dewasa (30+). Satu hari terlewat per minggu dimaafkan. Kalau terlewat lagi, perjalanan turun separuh dan kupu-kupu beristirahat di kepompong sampai kamu mencatat lagi. Warna sayapnya mengikuti mood yang paling sering kamu catat 14 hari terakhir.",
+        "links" => [["Lihat metamorfosis", "/metamorfosis.php"]],
+    ],
+    [
+        "id" => "ringkasan",
+        "q" => "Apa itu ringkasan mingguan?",
+        "keys" => ["ringkasan", "mingguan", "sorotan", "rekap"],
+        "a" => "Ringkasan mingguan ada di Wawasan → Ringkasan mingguan. Isinya rangkuman hari demi hari, sorotan minggu itu, aktivitas yang sering muncul, dan progres targetmu. Minggu dihitung dari Senin sampai Minggu.",
+        "links" => [["Buka ringkasan", "/ringkasan.php"]],
+    ],
 ];
 
 /** Jawaban bot untuk satu pertanyaan. */
-function bot_answer(string $question): array
+function bot_answer(string $question, ?int $userId = null): array
 {
     if (crisis_detect($question)) {
         return [
@@ -156,8 +191,21 @@ function bot_answer(string $question): array
         }
     }
 
-    if ($best !== null) {
-        return ["crisis" => false, "reply" => $best["a"], "links" => $best["links"]];
+    // FAQ menjawab langsung kalau cocok jelas (skor tinggi atau pertanyaan pendek) atau AI tidak tersedia.
+    $words = count(array_filter(explode(" ", trim($q))));
+    $confident = $best !== null && ($bestScore >= 2 || $words <= 5);
+    if ($best !== null && ($confident || !ai_enabled() || $userId === null)) {
+        return ["crisis" => false, "ai" => false, "reply" => $best["a"], "links" => $best["links"]];
+    }
+
+    if ($userId !== null) {
+        $ai = ai_answer($question, $userId);
+        if ($ai !== null) {
+            return $ai;
+        }
+        if ($best !== null) {
+            return ["crisis" => false, "ai" => false, "reply" => $best["a"], "links" => $best["links"]];
+        }
     }
 
     return [
@@ -171,7 +219,7 @@ function bot_answer(string $question): array
 /** Daftar pertanyaan yang disarankan (chip). */
 function bot_suggestions(): array
 {
-    $ids = ["catat", "password", "privasi", "musik", "chat", "hapusakun"];
+    $ids = ["panduan", "catat", "metamorfosis", "riwayat", "privasi", "chat"];
     $out = [];
     foreach (BOT_KB as $e) {
         if (in_array($e["id"], $ids, true)) {

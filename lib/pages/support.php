@@ -113,7 +113,7 @@ page_header("Dukungan", ["active" => "support"]);
 
             <div class="bot" id="bot" data-endpoint="/bot.php" data-csrf="<?= h(csrf_token()) ?>">
                 <div class="bot-messages" id="bot-messages" aria-live="polite" tabindex="0" aria-label="Percakapan dengan asisten">
-                    <div class="bot-msg bot">Halo! Tanyakan apa saja soal cara memakai MoodJourney, atau pilih salah satu pertanyaan di bawah.</div>
+                    <div class="bot-msg bot">Halo! Tanyakan apa saja soal cara memakai MoodJourney, misalnya langkah mencatat mood atau membaca statistik. Atau pilih salah satu pertanyaan di bawah.</div>
                 </div>
                 <div class="chip-row bot-suggestions">
                     <?php foreach (bot_suggestions() as $q): ?>
