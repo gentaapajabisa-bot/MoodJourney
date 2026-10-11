@@ -109,19 +109,19 @@ function page_header(string $title, array $opts = []): void
             <a href="/dukungan.php" <?= $active === "support" ? 'aria-current="page"' : "" ?>>
                 Dukungan<span class="badge" data-unread-badge <?= $unread > 0 ? "" : "hidden" ?>><?= $unread ?></span>
             </a>
-            <a href="/profile.php" <?= $active === "profile" ? 'aria-current="page"' : "" ?>>Profil</a>
+            <a href="/profile.php" class="nav-profile" <?= $active === "profile" ? 'aria-current="page"' : "" ?>><?= avatar_html($user, 26) ?> Profil</a>
             <a href="/diary.php" class="btn btn-small">Catat mood</a>
         <?php elseif ($nav === "admin" && $user): $unread = unread_count_for($user); ?>
             <a href="/admin/" <?= $active === "admin" ? 'aria-current="page"' : "" ?>>Ringkasan
                 <span class="badge" data-unread-badge <?= $unread > 0 ? "" : "hidden" ?>><?= $unread ?></span>
             </a>
-            <a href="/profile.php" <?= $active === "profile" ? 'aria-current="page"' : "" ?>>Profil</a>
+            <a href="/profile.php" class="nav-profile" <?= $active === "profile" ? 'aria-current="page"' : "" ?>><?= avatar_html($user, 26) ?> Profil</a>
             <span class="admin-badge">Admin</span>
         <?php elseif ($nav === "counselor" && $user): $unread = unread_count_for($user); ?>
             <a href="/konselor/" <?= $active === "counselor" ? 'aria-current="page"' : "" ?>>Antrean
                 <span class="badge" data-unread-badge <?= $unread > 0 ? "" : "hidden" ?>><?= $unread ?></span>
             </a>
-            <a href="/profile.php" <?= $active === "profile" ? 'aria-current="page"' : "" ?>>Profil</a>
+            <a href="/profile.php" class="nav-profile" <?= $active === "profile" ? 'aria-current="page"' : "" ?>><?= avatar_html($user, 26) ?> Profil</a>
             <span class="admin-badge">Konselor</span>
         <?php elseif ($nav === "public"): ?>
             <a href="/login.php">Masuk</a>

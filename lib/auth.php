@@ -13,7 +13,7 @@ function current_user(): ?array
         return $user = null;
     }
     $row = db_one(
-        "SELECT id, name, email, role, bio, is_active, reminder_email, created_at FROM users WHERE id = ? LIMIT 1",
+        "SELECT id, name, email, role, bio, is_active, reminder_email, avatar_v, created_at FROM users WHERE id = ? LIMIT 1",
         "i",
         [(int) $_SESSION["user_id"]]
     );

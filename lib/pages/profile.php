@@ -22,6 +22,29 @@ if (is_post()) {
         redirect("/profile.php");
     }
 
+    if ($action === "avatar") {
+        $bucket = "avatar:" . $userId;
+        $photo = photo_read_single("avatar", AVATAR_MAX_BYTES, AVATAR_MAX_DIM);
+        if (rate_count($bucket, 3600) >= 20) {
+            flash("error", "Terlalu sering mengganti foto. Coba lagi nanti.");
+        } elseif ($photo === null) {
+            flash("error", "Pilih foto terlebih dulu.");
+        } elseif (isset($photo["error"])) {
+            flash("error", $photo["error"]);
+        } else {
+            rate_hit($bucket);
+            avatar_save($userId, $photo);
+            flash("success", "Foto profil diperbarui.");
+        }
+        redirect("/profile.php");
+    }
+
+    if ($action === "avatar_remove") {
+        avatar_delete($userId);
+        flash("success", "Foto profil dihapus.");
+        redirect("/profile.php");
+    }
+
     if ($action === "password") {
         $bucket = "pwchange:" . $userId;
         $current = (string) ($_POST["current"] ?? "");
@@ -96,6 +119,31 @@ page_header("Profil", ["nav" => nav_for($user), "active" => "profile"]);
                 · <?= (int) $stats["total"] ?> catatan sejak <?= h(date_id($stats["first_date"])) ?>
             <?php endif; ?>
         </p>
+    </section>
+
+    <section class="card">
+        <h2>Foto profil</h2>
+        <div class="avatar-editor">
+            <div class="avatar-preview" id="avatar-preview-wrap"><?= avatar_html($user, 96, "avatar-lg") ?></div>
+            <div class="avatar-controls">
+                <form method="POST" enctype="multipart/form-data" id="avatar-form">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="action" value="avatar">
+                    <label class="sr-only" for="avatar-input">Pilih foto profil</label>
+                    <input class="form-control" type="file" id="avatar-input" name="avatar" accept="image/jpeg,image/png,image/webp,image/*">
+                    <small class="muted block">Foto dipotong persegi dan dikecilkan otomatis di perangkatmu. Hanya kamu yang bisa melihatnya.</small>
+                    <p class="muted" id="avatar-status" aria-live="polite"></p>
+                    <button class="btn btn-small" type="submit" id="avatar-save" disabled>Simpan foto</button>
+                </form>
+                <?php if (!empty($user["avatar_v"])): ?>
+                    <form method="POST" class="avatar-remove" data-confirm="Hapus foto profil?">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="action" value="avatar_remove">
+                        <button class="btn btn-outline btn-small btn-quiet-danger" type="submit">Hapus foto</button>
+                    </form>
+                <?php endif; ?>
+            </div>
+        </div>
     </section>
 
     <section class="card">

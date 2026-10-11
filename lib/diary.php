@@ -97,10 +97,15 @@ function render_diary_item(array $entry, bool $actions = true, string $returnTo 
                 <p><?= nl2br(h($note)) ?></p>
             <?php endif; ?>
 
-            <?php if (!empty($entry["photo_id"])): ?>
-                <a class="diary-photo" href="/photo.php?id=<?= (int) $entry["photo_id"] ?>" target="_blank" rel="noopener">
-                    <img src="/photo.php?id=<?= (int) $entry["photo_id"] ?>" alt="Foto pada catatan <?= h(date_id($entry["diary_date"])) ?>" loading="lazy">
-                </a>
+            <?php $photoIds = $entry["photo_ids"] ?? (!empty($entry["photo_id"]) ? [(int) $entry["photo_id"]] : []); ?>
+            <?php if ($photoIds): ?>
+                <div class="diary-photos">
+                    <?php foreach ($photoIds as $i => $pid): ?>
+                        <a class="diary-photo" href="/photo.php?id=<?= (int) $pid ?>" target="_blank" rel="noopener">
+                            <img src="/photo.php?id=<?= (int) $pid ?>" alt="Foto <?= $i + 1 ?> pada catatan <?= h(date_id($entry["diary_date"])) ?>" loading="lazy">
+                        </a>
+                    <?php endforeach; ?>
+                </div>
             <?php endif; ?>
 
             <div class="chip-row">

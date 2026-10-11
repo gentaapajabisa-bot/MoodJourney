@@ -47,6 +47,7 @@ $routes = [
     "bot"            => "bot",
     "tenang"         => "calm",
     "photo"          => "photo",
+    "avatar"         => "avatar",
     "support/action" => "support_action",
     "konselor"       => "counselor/index",
     "konselor/index" => "counselor/index",

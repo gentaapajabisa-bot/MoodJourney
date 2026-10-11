@@ -52,9 +52,12 @@ page_header("Dashboard", ["active" => "dashboard"]);
 <div class="container">
 
     <section class="dashboard-header">
-        <div>
-            <h1>Halo, <?= h($user["name"]) ?> 👋</h1>
-            <p class="muted">Gimana perasaanmu hari ini?</p>
+        <div class="dashboard-greeting">
+            <a href="/profile.php" class="greeting-avatar" aria-label="Buka profil"><?= avatar_html($user, 56) ?></a>
+            <div>
+                <h1>Halo, <?= h($user["name"]) ?> 👋</h1>
+                <p class="muted">Gimana perasaanmu hari ini?</p>
+            </div>
         </div>
         <a href="/diary.php" class="btn">+ Catat mood</a>
     </section>

@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS users (
     last_login_at DATETIME NULL,
     reminder_email TINYINT(1) NOT NULL DEFAULT 0,
     last_reminded_on DATE NULL,
+    avatar_v INT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
@@ -110,8 +111,16 @@ CREATE TABLE IF NOT EXISTS diary_photos (
     size INT NOT NULL,
     data MEDIUMBLOB NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE KEY uq_photo_diary (diary_id),
+    INDEX idx_photo_diary (diary_id),
     INDEX idx_photo_user (user_id)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS user_avatars (
+    user_id INT NOT NULL PRIMARY KEY,
+    mime VARCHAR(30) NOT NULL,
+    size INT NOT NULL,
+    data MEDIUMBLOB NOT NULL,
+    updated_at DATETIME NULL
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS support_requests (
@@ -136,4 +145,4 @@ SELECT 'Admin MoodJourney', 'admin@moodjourney.test',
        '$2y$10$9gTRGTvMdfwTvkaTCqULaeXgCz3EGiTKkZcMWrwgCSbUjJhBHpb7y', 'admin'
 WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = 'admin@moodjourney.test');
 
-REPLACE INTO app_meta (k, v) VALUES ('schema_version', '4');
+REPLACE INTO app_meta (k, v) VALUES ('schema_version', '5');

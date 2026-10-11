@@ -99,8 +99,8 @@ const BOT_KB = [
     [
         "id" => "foto",
         "q" => "Bagaimana menambahkan foto ke catatan?",
-        "keys" => ["foto", "gambar", "upload", "unggah", "lampiran", "picture"],
-        "a" => "Di form catatan ada bagian \"Foto\". Pilih satu foto dan ukurannya dikecilkan otomatis. Satu catatan bisa punya satu foto. Foto hanya bisa dilihat olehmu.",
+        "keys" => ["foto", "gambar", "upload", "unggah", "lampiran", "picture", "avatar", "foto profil"],
+        "a" => "Di form catatan ada bagian \"Foto\". Pilih satu atau beberapa foto (maksimal 4 per catatan), dan ukurannya dikecilkan otomatis. Untuk membuang foto lama, buka catatannya lewat tombol Ubah lalu centang \"Hapus\". Foto hanya bisa dilihat olehmu. Foto profil diatur di halaman Profil.",
         "links" => [["Catat mood", "/diary.php"]],
     ],
     [

@@ -48,7 +48,7 @@ Buku harian mood: pengguna mencatat perasaan setiap hari, lalu melihat pola dan 
 - Geser seberapa kuat perasaannya, dari 1 (sangat ringan) sampai 5 (sangat kuat).
 - Tandai aktivitas hari itu: Tidur cukup, Olahraga, Kuliah/kerja, Keluarga, Teman, Makan sehat, Me-time, Ibadah, Hobi, Bepergian. Boleh juga mengisi aktivitas lain.
 - Menulis cerita itu opsional (maksimal 3000 karakter). Ada pertanyaan pemantik; klik "Ganti pertanyaan" kalau kurang cocok.
-- Boleh menambahkan satu foto per catatan (ukurannya dikecilkan otomatis, hanya terlihat oleh pemilik akun).
+- Boleh menambahkan sampai 4 foto per catatan (JPG, PNG, atau WebP; ukurannya dikecilkan otomatis, hanya terlihat oleh pemilik akun). Untuk menghapus foto lama, buka catatan lewat tombol Ubah dan centang "Hapus" pada foto itu. Satu akun bisa menyimpan maksimal 150 foto.
 - Tanggal bisa diubah ke hari yang sudah lewat, tidak boleh ke masa depan.
 - Klik simpan. Satu hari boleh punya lebih dari satu catatan.
 
@@ -83,6 +83,7 @@ Suara hujan malam, pantai, fokus, dan tidur yang bisa dicampur, dengan pengatur 
 - Chat dengan tim: pesan ke admin untuk masalah akun atau fitur. Admin bukan tenaga kesehatan jiwa.
 
 9. PROFIL (menu Profil)
+- Foto profil: pilih foto, otomatis dipotong persegi, lalu klik "Simpan foto". Bisa dihapus dengan "Hapus foto". Hanya terlihat oleh pemilik akun; tanpa foto, tampil huruf pertama nama.
 - Data diri: ubah nama dan bio.
 - Ubah password: isi password saat ini, password baru, dan ulangi.
 - Pengingat di browser: pilih jam lalu Aktifkan. Muncul saat MoodJourney terbuka.

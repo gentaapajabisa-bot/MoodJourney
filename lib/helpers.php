@@ -244,6 +244,7 @@ function delete_user_data(int $userId): void
         db_exec("DELETE FROM password_resets WHERE user_id = ?", "i", [$userId]);
         db_exec("DELETE FROM achievements WHERE user_id = ?", "i", [$userId]);
         db_exec("DELETE FROM diary_photos WHERE user_id = ?", "i", [$userId]);
+        db_exec("DELETE FROM user_avatars WHERE user_id = ?", "i", [$userId]);
         db_exec("DELETE FROM support_requests WHERE user_id = ?", "i", [$userId]);
         db_exec("DELETE FROM goals WHERE user_id = ?", "i", [$userId]);
         db_exec("DELETE FROM users WHERE id = ?", "i", [$userId]);

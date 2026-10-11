@@ -16,14 +16,7 @@ if ($id > 0) {
 $today = date("Y-m-d");
 $errors = [];
 
-$existingPhotoId = null;
-if ($entry) {
-    $existingPhotoId = db_value(
-        "SELECT id FROM diary_photos WHERE diary_id = ? AND user_id = ? LIMIT 1",
-        "ii",
-        [$id, $userId]
-    );
-}
+$existingPhotoIds = $entry ? photo_ids_for_diary($userId, $id) : [];
 
 $form = [
     "mood"      => $entry["mood"] ?? "🙂",
@@ -62,13 +55,27 @@ if (is_post()) {
         $errors[] = "Cerita maksimal 3000 karakter.";
     }
 
-    $photo = photo_read_upload();
-    if ($photo !== null && isset($photo["error"])) {
-        $errors[] = $photo["error"];
-        $photo = null;
-    } elseif ($photo !== null && !$existingPhotoId && photo_count($userId) >= PHOTO_MAX_PER_USER) {
-        $errors[] = "Batas jumlah foto tercapai. Hapus beberapa foto lama dulu.";
-        $photo = null;
+    $upload = photo_read_uploads("photos");
+    $newPhotos = $upload["photos"];
+    foreach ($upload["errors"] as $msg) {
+        $errors[] = $msg;
+    }
+
+    // foto lama yang ditandai untuk dihapus (hanya yang memang milik catatan ini)
+    $removeIds = [];
+    foreach ((array) ($_POST["remove_photos"] ?? []) as $rid) {
+        if (in_array((int) $rid, $existingPhotoIds, true)) {
+            $removeIds[] = (int) $rid;
+        }
+    }
+
+    if ($newPhotos) {
+        $remaining = count($existingPhotoIds) - count($removeIds);
+        if ($remaining + count($newPhotos) > PHOTO_MAX_PER_ENTRY) {
+            $errors[] = "Satu catatan maksimal " . PHOTO_MAX_PER_ENTRY . " foto.";
+        } elseif (photo_count($userId) - count($removeIds) + count($newPhotos) > PHOTO_MAX_PER_USER) {
+            $errors[] = "Batas jumlah foto tercapai. Hapus beberapa foto lama dulu.";
+        }
     }
 
     if (!$errors) {
@@ -93,10 +100,11 @@ if (is_post()) {
             flash("success", "Catatan tersimpan.");
         }
 
-        if ($photo !== null) {
-            photo_save($userId, (int) $savedId, $photo);
-        } elseif ($entry && !empty($_POST["remove_photo"])) {
-            photo_delete_for_diary($userId, (int) $savedId);
+        if ($removeIds) {
+            photo_delete_ids($userId, (int) $savedId, $removeIds);
+        }
+        foreach ($newPhotos as $photo) {
+            photo_add($userId, (int) $savedId, $photo);
         }
 
         // tanda krisis di cerita: tampilkan dukungan dengan lembut (tidak ada yang dikirim ke staf)
@@ -192,26 +200,28 @@ page_header($entry ? "Ubah catatan" : "Catat mood", ["active" => "diary"]);
             </div>
 
             <fieldset class="form-group photo-field">
-                <legend>Foto <span class="muted">(opsional, satu per catatan)</span></legend>
+                <legend>Foto <span class="muted">(opsional, maksimal <?= PHOTO_MAX_PER_ENTRY ?> per catatan)</span></legend>
 
-                <?php if ($existingPhotoId): ?>
-                    <div class="photo-current">
-                        <img src="/photo.php?id=<?= (int) $existingPhotoId ?>" alt="Foto catatan saat ini" loading="lazy">
-                        <label class="check-row">
-                            <input type="checkbox" name="remove_photo" value="1">
-                            <span>Hapus foto ini</span>
-                        </label>
+                <?php if ($existingPhotoIds): ?>
+                    <div class="photo-thumbs" id="photo-existing">
+                        <?php foreach ($existingPhotoIds as $pid): ?>
+                            <figure class="photo-thumb">
+                                <img src="/photo.php?id=<?= (int) $pid ?>" alt="Foto yang sudah tersimpan" loading="lazy">
+                                <label class="check-row">
+                                    <input type="checkbox" name="remove_photos[]" value="<?= (int) $pid ?>">
+                                    <span>Hapus</span>
+                                </label>
+                            </figure>
+                        <?php endforeach; ?>
                     </div>
                 <?php endif; ?>
 
-                <input class="form-control" type="file" id="photo-input" name="photo" accept="image/jpeg,image/png,image/webp,image/*"
+                <input class="form-control" type="file" id="photo-input" name="photos[]" multiple
+                       accept="image/jpeg,image/png,image/webp,image/*"
+                       data-max="<?= PHOTO_MAX_PER_ENTRY ?>" data-existing="<?= count($existingPhotoIds) ?>"
                        aria-describedby="photo-hint">
-                <small id="photo-hint" class="muted block">Foto dikecilkan otomatis di perangkatmu dan hanya bisa dilihat olehmu.
-                    <?= $existingPhotoId ? "Memilih foto baru akan mengganti yang lama." : "" ?></small>
-                <div class="photo-preview" id="photo-preview" hidden>
-                    <img id="photo-preview-img" alt="Pratinjau foto yang dipilih">
-                    <button type="button" class="btn btn-outline btn-small" id="photo-clear">Batal pilih foto</button>
-                </div>
+                <small id="photo-hint" class="muted block">Pilih satu atau beberapa foto. Foto dikecilkan otomatis di perangkatmu dan hanya bisa dilihat olehmu.</small>
+                <div class="photo-thumbs" id="photo-preview" hidden></div>
                 <p class="muted" id="photo-status" aria-live="polite"></p>
             </fieldset>
 

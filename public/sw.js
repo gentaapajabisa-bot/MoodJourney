@@ -4,7 +4,7 @@
  * - Halaman: SELALU lewat jaringan. Halaman berisi data pribadi tidak pernah disimpan di cache.
  *   Kalau offline, ditampilkan /offline.html.
  */
-const VERSION = "mj-v6";
+const VERSION = "mj-v7";
 const STATIC_CACHE = "mj-static-" + VERSION;
 const PRECACHE = ["/offline.html", "/assets/css/style.css", "/assets/js/app.js", "/assets/icons/icon-192.png"];
 

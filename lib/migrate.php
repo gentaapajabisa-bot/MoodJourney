@@ -8,7 +8,7 @@
  * terkait dilakukan di kode aplikasi.
  */
 
-const SCHEMA_VERSION = 4;
+const SCHEMA_VERSION = 5;
 
 function column_exists(mysqli $db, string $table, string $column): bool
 {
@@ -223,8 +223,17 @@ function ensure_schema(mysqli $db): void
             size INT NOT NULL,
             data MEDIUMBLOB NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE KEY uq_photo_diary (diary_id),
+            INDEX idx_photo_diary (diary_id),
             INDEX idx_photo_user (user_id)
+        ) ENGINE=InnoDB"
+    );
+    run_query($db,
+        "CREATE TABLE IF NOT EXISTS user_avatars (
+            user_id INT NOT NULL PRIMARY KEY,
+            mime VARCHAR(30) NOT NULL,
+            size INT NOT NULL,
+            data MEDIUMBLOB NOT NULL,
+            updated_at DATETIME NULL
         ) ENGINE=InnoDB"
     );
     run_query($db,
@@ -249,6 +258,16 @@ function ensure_schema(mysqli $db): void
     add_column($db, "users", "last_login_at", "DATETIME NULL");
     add_column($db, "users", "reminder_email", "TINYINT(1) NOT NULL DEFAULT 0");
     add_column($db, "users", "last_reminded_on", "DATE NULL");
+    add_column($db, "users", "avatar_v", "INT NULL");
+
+    // skema v5: satu catatan boleh punya banyak foto (hapus indeks UNIQUE lama, ganti indeks biasa)
+    if (index_exists($db, "diary_photos", "uq_photo_diary")) {
+        // errno 1091 = indeks sudah terhapus (permintaan lain lebih dulu)
+        if (!$db->query("ALTER TABLE diary_photos DROP INDEX uq_photo_diary") && $db->errno !== 1091) {
+            throw new RuntimeException("Migrasi gagal (hapus indeks uq_photo_diary): " . $db->error);
+        }
+    }
+    add_index($db, "diary_photos", "idx_photo_diary", "diary_id");
 
     // peran konselor: tambahkan ke ENUM role bila belum ada
     if (strpos(column_type($db, "users", "role"), "counselor") === false) {

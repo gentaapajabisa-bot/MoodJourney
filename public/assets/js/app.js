@@ -535,84 +535,180 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     /* 2. Foto: dikecilkan di browser (metadata lokasi/EXIF otomatis hilang) */
-    const photoInput = document.getElementById("photo-input");
-    if (photoInput) {
-        const preview = document.getElementById("photo-preview");
-        const previewImg = document.getElementById("photo-preview-img");
-        const clearBtn = document.getElementById("photo-clear");
-        const status = document.getElementById("photo-status");
-        const MAX_SIDE = 1280;
-        let objectUrl = null;
+    const loadBitmap = async (file) => {
+        if (window.createImageBitmap) {
+            try { return await createImageBitmap(file, { imageOrientation: "from-image" }); } catch (e) { /* lanjut ke Image */ }
+        }
+        return new Promise((resolve, reject) => {
+            const url = URL.createObjectURL(file);
+            const img = new Image();
+            img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+            img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("decode")); };
+            img.src = url;
+        });
+    };
 
-        const reset = () => {
-            if (objectUrl) { URL.revokeObjectURL(objectUrl); objectUrl = null; }
-            preview.hidden = true;
-        };
+    const toBlob = (canvas, quality) => new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
 
-        const loadBitmap = async (file) => {
-            if (window.createImageBitmap) {
-                try { return await createImageBitmap(file, { imageOrientation: "from-image" }); } catch (e) { /* lanjut ke Image */ }
-            }
-            return new Promise((resolve, reject) => {
-                const url = URL.createObjectURL(file);
-                const img = new Image();
-                img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
-                img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("decode")); };
-                img.src = url;
-            });
-        };
+    /**
+     * Kecilkan gambar jadi JPEG di bawah maxBytes.
+     * opts: maxSide (px), maxBytes, square (potong tengah jadi persegi)
+     */
+    const processImage = async (file, opts) => {
+        const bmp = await loadBitmap(file);
+        const w = bmp.width || bmp.naturalWidth;
+        const h = bmp.height || bmp.naturalHeight;
 
-        const toBlob = (canvas, quality) => new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
-
-        photoInput.addEventListener("change", async () => {
-            const file = photoInput.files && photoInput.files[0];
-            reset();
-            if (!file) { status.textContent = ""; return; }
-
-            if (!file.type.startsWith("image/")) {
-                status.textContent = "File harus berupa foto.";
-                photoInput.value = "";
-                return;
-            }
-
-            status.textContent = "Memproses foto…";
-            try {
-                const bmp = await loadBitmap(file);
-                const w = bmp.width || bmp.naturalWidth;
-                const h = bmp.height || bmp.naturalHeight;
-                const ratio = Math.min(1, MAX_SIDE / Math.max(w, h));
-                const canvas = document.createElement("canvas");
+        const draw = (side) => {
+            const canvas = document.createElement("canvas");
+            const ctx2d = canvas.getContext("2d");
+            if (opts.square) {
+                const crop = Math.min(w, h);
+                const out = Math.min(side, crop);
+                canvas.width = canvas.height = out;
+                ctx2d.fillStyle = "#ffffff";
+                ctx2d.fillRect(0, 0, out, out);
+                ctx2d.drawImage(bmp, (w - crop) / 2, (h - crop) / 2, crop, crop, 0, 0, out, out);
+            } else {
+                const ratio = Math.min(1, side / Math.max(w, h));
                 canvas.width = Math.max(1, Math.round(w * ratio));
                 canvas.height = Math.max(1, Math.round(h * ratio));
-                const ctx2d = canvas.getContext("2d");
                 ctx2d.fillStyle = "#ffffff"; // latar putih untuk PNG transparan
                 ctx2d.fillRect(0, 0, canvas.width, canvas.height);
                 ctx2d.drawImage(bmp, 0, 0, canvas.width, canvas.height);
-                if (bmp.close) bmp.close();
-
-                let blob = await toBlob(canvas, 0.82);
-                if (blob && blob.size > 1400000) blob = await toBlob(canvas, 0.6);
-                if (!blob || blob.size > 1450000) throw new Error("terlalu besar");
-
-                const out = new File([blob], "foto.jpg", { type: "image/jpeg" });
-                const dt = new DataTransfer();
-                dt.items.add(out);
-                photoInput.files = dt.files;
-
-                objectUrl = URL.createObjectURL(blob);
-                previewImg.src = objectUrl;
-                preview.hidden = false;
-                status.textContent = "Siap diunggah (" + Math.max(1, Math.round(blob.size / 1024)) + " KB).";
-            } catch (e) {
-                status.textContent = "Foto tidak bisa diproses. Coba format JPG atau PNG yang lebih kecil.";
-                photoInput.value = "";
             }
-        });
+            return canvas;
+        };
 
-        clearBtn.addEventListener("click", () => {
-            photoInput.value = "";
-            reset();
-            status.textContent = "";
+        let blob = null;
+        for (const [side, quality] of [[opts.maxSide, 0.82], [opts.maxSide, 0.65], [opts.maxSide, 0.5], [Math.round(opts.maxSide * 0.75), 0.6]]) {
+            blob = await toBlob(draw(side), quality);
+            if (blob && blob.size <= opts.maxBytes) break;
+        }
+        if (bmp.close) bmp.close();
+        if (!blob || blob.size > opts.maxBytes) throw new Error("terlalu besar");
+        return blob;
+    };
+
+    const setFiles = (input, files) => {
+        const dt = new DataTransfer();
+        files.forEach((f) => dt.items.add(f));
+        input.files = dt.files;
+    };
+
+    /* 2a. Foto catatan: beberapa foto sekaligus */
+    const photoInput = document.getElementById("photo-input");
+    if (photoInput) {
+        const preview = document.getElementById("photo-preview");
+        const status = document.getElementById("photo-status");
+        const MAX = parseInt(photoInput.dataset.max || "4", 10);
+        const existing = parseInt(photoInput.dataset.existing || "0", 10);
+        const MAX_PHOTO_BYTES = 900000;      // per foto
+        const MAX_TOTAL_BYTES = 3800000;     // batas permintaan Vercel ~4,5 MB
+        let items = [];                      // {file, url}
+
+        const slots = () => {
+            const removed = document.querySelectorAll('input[name="remove_photos[]"]:checked').length;
+            return Math.max(0, MAX - existing + removed);
+        };
+
+        const render = () => {
+            preview.replaceChildren();
+            items.forEach((it, i) => {
+                const fig = document.createElement("figure");
+                fig.className = "photo-thumb";
+                const img = document.createElement("img");
+                img.src = it.url;
+                img.alt = "Pratinjau foto " + (i + 1);
+                const btn = document.createElement("button");
+                btn.type = "button";
+                btn.className = "btn btn-outline btn-small";
+                btn.textContent = "Batalkan";
+                btn.addEventListener("click", () => {
+                    URL.revokeObjectURL(it.url);
+                    items = items.filter((x) => x !== it);
+                    setFiles(photoInput, items.map((x) => x.file));
+                    render();
+                    status.textContent = items.length ? items.length + " foto siap diunggah." : "";
+                });
+                fig.append(img, btn);
+                preview.appendChild(fig);
+            });
+            preview.hidden = items.length === 0;
+        };
+
+        photoInput.addEventListener("change", async () => {
+            const picked = Array.from(photoInput.files || []);
+            setFiles(photoInput, items.map((x) => x.file)); // pertahankan yang sudah diproses
+            if (!picked.length) return;
+
+            const room = slots() - items.length;
+            if (room <= 0) {
+                status.textContent = "Sudah mencapai maksimal " + MAX + " foto per catatan.";
+                return;
+            }
+
+            const notes = [];
+            if (picked.length > room) notes.push("Hanya " + room + " foto lagi yang muat (maksimal " + MAX + " per catatan).");
+            status.textContent = "Memproses foto…";
+
+            let failed = 0;
+            for (const file of picked.slice(0, room)) {
+                if (!file.type.startsWith("image/")) { failed++; continue; }
+                try {
+                    const blob = await processImage(file, { maxSide: 1280, maxBytes: MAX_PHOTO_BYTES });
+                    const total = items.reduce((n, x) => n + x.file.size, 0) + blob.size;
+                    if (total > MAX_TOTAL_BYTES) { notes.push("Total ukuran foto terlalu besar, sebagian tidak ditambahkan."); break; }
+                    const out = new File([blob], "foto" + (items.length + 1) + ".jpg", { type: "image/jpeg" });
+                    items.push({ file: out, url: URL.createObjectURL(blob) });
+                } catch (e) {
+                    failed++;
+                }
+            }
+            if (failed) notes.push(failed + " foto tidak bisa diproses (coba JPG atau PNG yang lebih kecil).");
+
+            setFiles(photoInput, items.map((x) => x.file));
+            render();
+            const kb = Math.max(1, Math.round(items.reduce((n, x) => n + x.file.size, 0) / 1024));
+            status.textContent = [items.length ? items.length + " foto siap diunggah (" + kb + " KB)." : "", ...notes].filter(Boolean).join(" ");
+        });
+    }
+
+    /* 2b. Foto profil: dipotong persegi */
+    const avatarInput = document.getElementById("avatar-input");
+    if (avatarInput) {
+        const status = document.getElementById("avatar-status");
+        const saveBtn = document.getElementById("avatar-save");
+        const wrap = document.getElementById("avatar-preview-wrap");
+        let url = null;
+
+        avatarInput.addEventListener("change", async () => {
+            const file = avatarInput.files && avatarInput.files[0];
+            saveBtn.disabled = true;
+            if (!file) { status.textContent = ""; return; }
+            if (!file.type.startsWith("image/")) {
+                status.textContent = "File harus berupa foto.";
+                avatarInput.value = "";
+                return;
+            }
+            status.textContent = "Memproses foto…";
+            try {
+                const blob = await processImage(file, { maxSide: 320, maxBytes: 250000, square: true });
+                setFiles(avatarInput, [new File([blob], "profil.jpg", { type: "image/jpeg" })]);
+                if (url) URL.revokeObjectURL(url);
+                url = URL.createObjectURL(blob);
+                const img = document.createElement("img");
+                img.className = "avatar avatar-lg";
+                img.style.setProperty("--avatar-size", "96px");
+                img.src = url;
+                img.alt = "Pratinjau foto profil";
+                wrap.replaceChildren(img);
+                status.textContent = "Siap disimpan.";
+                saveBtn.disabled = false;
+            } catch (e) {
+                status.textContent = "Foto tidak bisa diproses. Coba format JPG atau PNG yang lain.";
+                avatarInput.value = "";
+            }
         });
     }
 });
