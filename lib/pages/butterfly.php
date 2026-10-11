@@ -63,6 +63,7 @@ page_header("Metamorfosis", ["active" => "statistics"]);
             <?php else: ?>
                 <p class="journey-done">✓ Hari ini sudah tercatat. Kupu-kupumu senang.</p>
             <?php endif; ?>
+            <p class="journey-demo"><button type="button" class="link-btn" data-stageup-open="stage-up-demo">✨ Lihat animasi naik tahap</button></p>
         </div>
     </section>
 
@@ -99,4 +100,8 @@ page_header("Metamorfosis", ["active" => "statistics"]);
     </section>
 
 </div>
-<?php page_footer();
+<?php
+$demoTo = $j["stage_index"] >= 1 ? $j["stage"] : "larva";
+$demoFrom = $stageNames[array_search($demoTo, $stageNames, true) - 1];
+echo stage_up_overlay_html($demoFrom, $demoTo, $j["colors"], false, "stage-up-demo");
+page_footer();

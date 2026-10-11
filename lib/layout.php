@@ -79,16 +79,22 @@ function page_header(string $title, array $opts = []): void
     <link rel="stylesheet" href="/assets/css/style.css">
 </head>
 <?php
+    // satu query: catatan terbaru dalam 3 hari terakhir menentukan "sudah mencatat hari ini" dan warna latar
     $loggedToday = "";
+    $auraTheme = "none";
     if ($user && $user["role"] === "user") {
-        $loggedToday = db_one(
-            "SELECT 1 AS x FROM diary WHERE user_id = ? AND diary_date = ? LIMIT 1",
+        $latest = db_one(
+            "SELECT mood, diary_date FROM diary WHERE user_id = ? AND diary_date >= ? ORDER BY diary_date DESC, id DESC LIMIT 1",
             "is",
-            [(int) $user["id"], date("Y-m-d")]
-        ) ? "1" : "0";
+            [(int) $user["id"], date("Y-m-d", strtotime("-2 days"))]
+        );
+        $loggedToday = $latest && $latest["diary_date"] === date("Y-m-d") ? "1" : "0";
+        $auraTheme = aura_theme_for_mood($latest["mood"] ?? null);
     }
 ?>
-<body class="<?= h($opts["body"] ?? "") ?>"<?= $loggedToday !== "" ? ' data-logged-today="' . $loggedToday . '"' : "" ?>>
+<body class="<?= h($opts["body"] ?? "") ?>" data-mood="<?= h($auraTheme) ?>"<?= $loggedToday !== "" ? ' data-logged-today="' . $loggedToday . '"' : "" ?>>
+
+<div class="aura" aria-hidden="true"><i></i><i></i><i></i></div>
 
 <a class="skip-link" href="#main">Lewati ke konten</a>
 
@@ -167,6 +173,14 @@ function page_footer(array $scripts = []): void
     <p>© <?= date("Y") ?> MoodJourney. Kenali dirimu lewat setiap cerita.</p>
 </footer>
 
+<?php
+// perayaan naik tahap (diatur setelah menyimpan catatan), tampil sekali
+$su = $_SESSION["stage_up"] ?? null;
+if (is_array($su)) {
+    unset($_SESSION["stage_up"]);
+    echo stage_up_overlay_html((string) ($su["from"] ?? ""), (string) ($su["to"] ?? ""), (array) ($su["colors"] ?? BUTTERFLY_DEFAULT_COLORS), true);
+}
+?>
 <script src="/assets/js/app.js" defer></script>
 <?php foreach ($scripts as $src): ?>
 <script src="<?= h($src) ?>" defer></script>

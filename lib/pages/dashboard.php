@@ -62,6 +62,17 @@ page_header("Dashboard", ["active" => "dashboard"]);
         <a href="/diary.php" class="btn">+ Catat mood</a>
     </section>
 
+    <section class="garden" aria-label="Taman kupu-kupu">
+        <canvas id="garden" aria-hidden="true"
+                data-count="<?= garden_butterfly_count($journey["days"]) ?>"
+                data-c1="<?= h($journey["colors"][0]) ?>" data-c2="<?= h($journey["colors"][1]) ?>"></canvas>
+        <div class="garden-caption">
+            <strong>Taman kupu-kupumu</strong>
+            <span><?= garden_butterfly_count($journey["days"]) ?> kupu-kupu · gerakkan kursor atau sentuh untuk memanggil mereka</span>
+        </div>
+        <a class="garden-link" href="/metamorfosis.php">Lihat perjalananmu →</a>
+    </section>
+
     <?php if (!$streak["today_done"]): ?>
         <div class="notice notice-info reminder">
             <span>
@@ -200,4 +211,4 @@ page_header("Dashboard", ["active" => "dashboard"]);
     </section>
 
 </div>
-<?php page_footer();
+<?php page_footer(["/assets/js/garden.js"]);

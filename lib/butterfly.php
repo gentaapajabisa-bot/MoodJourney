@@ -287,3 +287,55 @@ function journey_stage_up_text(string $newStage): string
 {
     return "Kupu-kupumu naik tahap menjadi " . BUTTERFLY_STAGES[$newStage]["label"] . ". " . BUTTERFLY_STAGES[$newStage]["tagline"] . ".";
 }
+
+/* ---------- Latar aura pastel & animasi naik tahap ---------- */
+
+/** Tema latar dari emoji mood: joy | good | neutral | tired | anxious | sad | angry | none. */
+function aura_theme_for_mood(?string $emoji): string
+{
+    $map = [
+        "😄" => "joy", "🥰" => "joy", "🙂" => "good", "😐" => "neutral",
+        "😴" => "tired", "😰" => "anxious", "😔" => "sad", "😡" => "angry",
+    ];
+    return $map[(string) $emoji] ?? "none";
+}
+
+/** Jumlah kupu-kupu di taman: bertambah seiring perjalanan (1 sampai 8). */
+function garden_butterfly_count(int $days): int
+{
+    return max(1, min(8, 1 + intdiv($days, 4)));
+}
+
+/**
+ * Lapisan perayaan naik tahap: kepompong/ulat bergetar, lalu tahap baru muncul bersama kelopak.
+ * $autoShow=true dipakai setelah menyimpan catatan; false untuk pratinjau (dibuka lewat tombol).
+ */
+function stage_up_overlay_html(string $from, string $to, array $colors, bool $autoShow, string $id = "stage-up"): string
+{
+    if (!isset(BUTTERFLY_STAGES[$from], BUTTERFLY_STAGES[$to])) {
+        return "";
+    }
+    $meta = BUTTERFLY_STAGES[$to];
+    ob_start();
+    ?>
+    <div class="stageup" id="<?= h($id) ?>" role="dialog" aria-modal="true" aria-labelledby="<?= h($id) ?>-title"
+         data-autoshow="<?= $autoShow ? "1" : "0" ?>" <?= $autoShow ? "" : "hidden" ?>>
+        <div class="stageup-rays" aria-hidden="true"></div>
+        <canvas class="stageup-canvas" aria-hidden="true"></canvas>
+        <div class="stageup-card">
+            <div class="stageup-art">
+                <div class="stageup-old" aria-hidden="true"><?= butterfly_svg($from, $colors, ["animate" => false]) ?></div>
+                <div class="stageup-new"><?= butterfly_svg($to, $colors, ["label" => $meta["label"]]) ?></div>
+            </div>
+            <p class="stageup-kicker">Kupu-kupumu naik tahap</p>
+            <h2 id="<?= h($id) ?>-title"><?= h($meta["label"]) ?></h2>
+            <p class="stageup-tagline"><?= h($meta["tagline"]) ?></p>
+            <div class="stageup-actions">
+                <button type="button" class="btn" data-stageup-close>Lanjut</button>
+                <a class="btn btn-outline" href="/metamorfosis.php">Lihat perjalananku</a>
+            </div>
+        </div>
+    </div>
+    <?php
+    return (string) ob_get_clean();
+}

@@ -711,4 +711,118 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     }
+
+    /* 3. Animasi naik tahap (kepompong menetas) */
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let suRaf = 0;
+    let suTimer = 0;
+    let suReturnFocus = null;
+
+    const stageUpBurst = (el) => {
+        const canvas = el.querySelector(".stageup-canvas");
+        if (!canvas || reduceMotion) return;
+        const dpr = Math.min(2, window.devicePixelRatio || 1);
+        const w = window.innerWidth, h = window.innerHeight;
+        canvas.width = Math.round(w * dpr);
+        canvas.height = Math.round(h * dpr);
+        const c = canvas.getContext("2d");
+        c.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        const art = el.querySelector(".stageup-art").getBoundingClientRect();
+        const cx = art.left + art.width / 2, cy = art.top + art.height / 2;
+        const colors = ["#ffc2d9", "#bfe3ff", "#c4ecd9", "#fff0b8", "#dcd2ff", "#ffd6c2"];
+        const parts = Array.from({ length: 130 }, () => {
+            const a = Math.random() * Math.PI * 2;
+            const sp = 120 + Math.random() * 360;
+            return {
+                x: cx, y: cy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 140,
+                r: Math.random() * 3, vr: (Math.random() - 0.5) * 9, size: 5 + Math.random() * 9,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                star: Math.random() < 0.28, life: 2.2 + Math.random() * 1.8, t: 0
+            };
+        });
+
+        let last = performance.now();
+        const frame = (now) => {
+            const dt = Math.min(0.05, (now - last) / 1000);
+            last = now;
+            c.clearRect(0, 0, w, h);
+            let alive = false;
+            for (const p of parts) {
+                p.t += dt;
+                if (p.t >= p.life) continue;
+                alive = true;
+                const drag = 1 - 1.7 * dt;
+                p.vx *= drag;
+                p.vy = p.vy * drag + 170 * dt;
+                p.x += p.vx * dt;
+                p.y += p.vy * dt;
+                p.r += p.vr * dt;
+                c.save();
+                c.globalAlpha = 1 - Math.pow(p.t / p.life, 2);
+                c.translate(p.x, p.y);
+                c.rotate(p.r);
+                c.fillStyle = p.color;
+                c.beginPath();
+                if (p.star) {
+                    for (let i = 0; i < 8; i++) {
+                        const rad = i % 2 ? p.size * 0.28 : p.size * 0.8;
+                        const ang = (i / 8) * Math.PI * 2;
+                        c.lineTo(Math.cos(ang) * rad, Math.sin(ang) * rad);
+                    }
+                    c.closePath();
+                } else {
+                    c.ellipse(0, 0, p.size, p.size * 0.55, 0, 0, Math.PI * 2);
+                }
+                c.fill();
+                c.restore();
+            }
+            if (alive) suRaf = requestAnimationFrame(frame);
+            else c.clearRect(0, 0, w, h);
+        };
+        suRaf = requestAnimationFrame(frame);
+    };
+
+    const closeStageUp = (el) => {
+        clearTimeout(suTimer);
+        cancelAnimationFrame(suRaf);
+        el.hidden = true;
+        el.classList.remove("is-playing");
+        document.body.classList.remove("has-stageup");
+        if (el.dataset.autoshow === "1") el.remove();
+        if (suReturnFocus && suReturnFocus.focus) suReturnFocus.focus();
+        suReturnFocus = null;
+    };
+
+    const openStageUp = (el) => {
+        suReturnFocus = document.activeElement;
+        el.hidden = false;
+        el.classList.remove("is-playing");
+        void el.offsetWidth; // mulai ulang animasi CSS
+        el.classList.add("is-playing");
+        document.body.classList.add("has-stageup");
+        const btn = el.querySelector("[data-stageup-close]");
+        if (btn) btn.focus({ preventScroll: true });
+        clearTimeout(suTimer);
+        suTimer = setTimeout(() => stageUpBurst(el), reduceMotion ? 0 : 1050);
+
+        if (!el.dataset.bound) {
+            el.dataset.bound = "1";
+            el.addEventListener("click", (e) => {
+                if (e.target === el || e.target.closest("[data-stageup-close]")) closeStageUp(el);
+            });
+            el.addEventListener("keydown", (e) => {
+                if (e.key === "Escape") closeStageUp(el);
+            });
+        }
+    };
+
+    document.querySelectorAll("[data-stageup-open]").forEach((btn) =>
+        btn.addEventListener("click", () => {
+            const el = document.getElementById(btn.dataset.stageupOpen);
+            if (el) openStageUp(el);
+        })
+    );
+    const autoStage = document.querySelector('.stageup[data-autoshow="1"]');
+    if (autoStage) openStageUp(autoStage);
 });
