@@ -203,6 +203,7 @@ function insights_tabs(string $active): void
         "badges"  => ["/pencapaian.php", "Pencapaian"],
         "butterfly" => ["/metamorfosis.php", "Metamorfosis"],
         "year"    => ["/setahun.php", "Setahun"],
+        "pattern" => ["/pola.php", "Pola"],
     ];
     echo '<nav class="segmented insights-tabs" aria-label="Wawasan">';
     foreach ($tabs as $key => [$href, $label]) {

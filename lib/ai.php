@@ -25,6 +25,8 @@ const AI_LINKS = [
     "/pencapaian.php"          => "Pencapaian",
     "/metamorfosis.php"        => "Metamorfosis",
     "/setahun.php"             => "Setahun",
+    "/pola.php"                => "Pola",
+    "/bagikan.php"             => "Bagikan perjalanan",
     "/tenang.php"              => "Ruang tenang",
     "/dukungan.php"            => "Dukungan",
     "/dukungan.php#konselor"   => "Bicara dengan konselor",
@@ -61,13 +63,15 @@ Menampilkan sapaan, kartu "Perjalananmu" (kupu-kupu), mood rata-rata 7 hari tera
 - Setiap catatan punya tombol Ubah dan Hapus (yang dihapus tidak bisa dikembalikan).
 - Tombol "Unduh CSV" dan "Cetak / PDF" mengikuti filter yang aktif. Foto tidak ikut diekspor.
 
-5. WAWASAN (menu Wawasan, punya enam tab)
+5. WAWASAN (menu Wawasan, punya tujuh tab)
 - Statistik: tren mood, lanskap mood 3D, mood yang paling sering, pola per hari dalam seminggu, hubungan aktivitas dan mood (baru muncul setelah aktivitas tercatat minimal 3 kali, hanya kecenderungan bukan sebab-akibat), dan kalender. Skor mood 1 (berat) sampai 5 (sangat baik).
 - Ringkasan mingguan: rangkuman hari demi hari, sorotan, aktivitas, dan target minggu itu.
 - Target: pilih aktivitas dan berapa hari per minggu, lalu klik Tambah target. Progres dihitung dari tag aktivitas di catatan, Senin sampai Minggu.
 - Pencapaian: penanda perjalanan, misalnya 10 catatan atau 7 hari beruntun. Bukan kompetisi, hanya terlihat oleh pemilik akun.
 - Metamorfosis: lihat bagian 6.
 - Setahun: kalender "year in pixels", satu kotak berwarna untuk setiap hari dalam setahun (tab Setahun, atau tombol "Lihat setahun" di Statistik). Pewarnaan bisa diganti antara Skor (1 berat sampai 5 baik) dan Mood. Arahkan kursor atau sentuh kotak untuk melihat harinya, lalu klik "Lihat catatan" atau "Catat hari ini". Bisa pindah tahun dengan tombol panah, dan "Unduh gambar" menyimpan kalender sebagai PNG (hanya warna, tanpa isi catatan).
+- Pola: tab Pola di Wawasan menunjukkan kecenderungan dari catatanmu 6 bulan terakhir: aktivitas yang biasanya menyertai hari yang lebih baik atau lebih berat, hari terbaik dan terberat dalam seminggu, dan tren 30 hari. Muncul setelah sekitar 14 hari tercatat. Dihitung dari angka saja tanpa membaca isi cerita, dan hanya menunjukkan hubungan, bukan sebab-akibat.
+- Bagikan perjalanan: di halaman Metamorfosis klik "Bagikan perjalananku" untuk membuat gambar kartu berisi kupu-kupu dan jumlah hari. Warna latar bisa dipilih, nama depan dan statistik boleh ditampilkan atau disembunyikan. Isi catatan, mood, dan foto tidak ikut. Tombol Bagikan membuka menu berbagi perangkat, atau pakai Unduh gambar.
 
 6. METAMORFOSIS (STREAK KUPU-KUPU)
 - Setiap hari yang dicatat menambah satu hari perjalanan, dan kupu-kupu tumbuh: Telur (0-2 hari), Ulat (3-6), Kepompong (7-13), Kupu-kupu muda (14-29), Kupu-kupu dewasa (30 hari atau lebih).
@@ -156,6 +160,16 @@ function ai_parse_reply(string $text): array
  */
 function ai_answer(string $question, int $userId): ?array
 {
+    try {
+        return ai_answer_inner($question, $userId);
+    } catch (Throwable $e) {
+        error_log("[MoodJourney] AI error: " . $e->getMessage());
+        return null;
+    }
+}
+
+function ai_answer_inner(string $question, int $userId): ?array
+{
     if (!ai_enabled() || $userId <= 0) {
         return null;
     }
@@ -184,8 +198,8 @@ function ai_answer(string $question, int $userId): ?array
         CURLOPT_POST           => true,
         CURLOPT_POSTFIELDS     => $payload,
         CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_CONNECTTIMEOUT => 4,
-        CURLOPT_TIMEOUT        => 8,
+        CURLOPT_CONNECTTIMEOUT => 3,
+        CURLOPT_TIMEOUT        => 6,
         CURLOPT_HTTPHEADER     => [
             "content-type: application/json",
             "x-api-key: " . env_value("ANTHROPIC_API_KEY", ""),

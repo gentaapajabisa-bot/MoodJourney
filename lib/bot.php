@@ -153,6 +153,20 @@ const BOT_KB = [
         "links" => [["Buka setahun", "/setahun.php"]],
     ],
     [
+        "id" => "pola",
+        "q" => "Apa itu tab Pola?",
+        "keys" => ["pola", "kecenderungan", "wawasan pola", "aktivitas yang bikin", "hari terbaik", "hari terberat", "apa yang membuat moodku"],
+        "a" => "Tab Pola (di Wawasan) menunjukkan kecenderungan dari catatanmu: aktivitas yang biasanya menyertai hari yang lebih baik atau berat, hari terbaik dan terberat dalam seminggu, serta tren 30 hari. Muncul setelah sekitar 14 hari tercatat dan dihitung dari angka saja, tanpa membaca ceritamu. Ini hanya hubungan yang terlihat, bukan sebab-akibat.",
+        "links" => [["Buka Pola", "/pola.php"]],
+    ],
+    [
+        "id" => "bagikan",
+        "q" => "Bagaimana membagikan perjalanan kupu-kupuku?",
+        "keys" => ["bagikan", "share", "kartu", "story", "instagram", "whatsapp", "pamer", "kirim gambar"],
+        "a" => "Buka Metamorfosis, lalu klik \"Bagikan perjalananku\". Pilih warna latar, tentukan apakah nama depan dan statistik ikut ditampilkan, lalu klik Bagikan atau Unduh gambar. Isi catatan, mood, dan fotomu tidak pernah ikut di gambar.",
+        "links" => [["Bagikan perjalanan", "/bagikan.php"]],
+    ],
+    [
         "id" => "ringkasan",
         "q" => "Apa itu ringkasan mingguan?",
         "keys" => ["ringkasan", "mingguan", "sorotan", "rekap"],

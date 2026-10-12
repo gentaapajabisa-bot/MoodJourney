@@ -63,7 +63,7 @@ page_header("Metamorfosis", ["active" => "statistics"]);
             <?php else: ?>
                 <p class="journey-done">✓ Hari ini sudah tercatat. Kupu-kupumu senang.</p>
             <?php endif; ?>
-            <p class="journey-demo"><button type="button" class="link-btn" data-stageup-open="stage-up-demo">✨ Lihat animasi naik tahap</button></p>
+            <p class="journey-demo"><a class="btn btn-small" href="/bagikan.php">🦋 Bagikan perjalananku</a> <button type="button" class="link-btn" data-stageup-open="stage-up-demo">✨ Lihat animasi naik tahap</button></p>
         </div>
     </section>
 
