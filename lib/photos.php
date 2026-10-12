@@ -202,3 +202,16 @@ function avatar_html(array $user, int $size = 32, string $class = ""): string
     $initial = mb_strtoupper(mb_substr(trim((string) ($user["name"] ?? "?")), 0, 1)) ?: "?";
     return '<span class="' . h($cls) . ' avatar-initial" style="' . $style . '" aria-hidden="true">' . h($initial) . '</span>';
 }
+
+/** Foto profil pengguna lain untuk panel admin (hanya admin yang boleh mengambilnya lewat /avatar.php?u=). */
+function admin_avatar_html(array $u, int $size = 40, string $class = ""): string
+{
+    $style = "--avatar-size:" . (int) $size . "px";
+    $cls = trim("avatar " . $class);
+    if (!empty($u["avatar_v"])) {
+        return '<img class="' . h($cls) . '" style="' . $style . '" loading="lazy" src="/avatar.php?u=' . (int) $u["id"] . '&amp;v=' . (int) $u["avatar_v"]
+             . '" alt="" width="' . (int) $size . '" height="' . (int) $size . '">';
+    }
+    $initial = mb_strtoupper(mb_substr(trim((string) ($u["name"] ?? "?")), 0, 1)) ?: "?";
+    return '<span class="' . h($cls) . ' avatar-initial" style="' . $style . '" aria-hidden="true">' . h($initial) . '</span>';
+}

@@ -47,6 +47,18 @@ $badgeRows = db_all(
 );
 $badgeCount = (int) db_value("SELECT COUNT(*) FROM achievements WHERE user_id = ?", "i", [$userId], 0);
 
+// Langkah awal: tampil sampai semuanya selesai atau pengguna menutupnya
+$goalCount = (int) db_value("SELECT COUNT(*) FROM goals WHERE user_id = ?", "i", [$userId], 0);
+$loggedDays = (int) db_value("SELECT COUNT(DISTINCT diary_date) FROM diary WHERE user_id = ?", "i", [$userId], 0);
+$onboard = [
+    ["Catat mood pertamamu", "Pilih emoji yang paling pas. Cerita boleh dikosongkan.", "/diary.php", $total >= 1, "Catat sekarang"],
+    ["Catat di 3 hari berbeda", "Kupu-kupumu menetas jadi ulat setelah 3 hari tercatat.", "/diary.php", $loggedDays >= 3, "Catat lagi"],
+    ["Buat satu target", "Pilih aktivitas dan berapa hari per minggu.", "/target.php", $goalCount >= 1, "Buat target"],
+    ["Pasang foto profil", "Opsional, supaya akunmu terasa milikmu.", "/profile.php", !empty($user["avatar_v"]), "Buka profil"],
+];
+$onboardDone = count(array_filter($onboard, fn($s) => $s[3]));
+$showOnboard = $onboardDone < count($onboard);
+
 page_header("Dashboard", ["active" => "dashboard"]);
 ?>
 <div class="container">
@@ -60,6 +72,73 @@ page_header("Dashboard", ["active" => "dashboard"]);
             </div>
         </div>
         <a href="/diary.php" class="btn">+ Catat mood</a>
+    </section>
+
+    <?php if ($showOnboard): ?>
+    <section class="card onboard" id="onboard" aria-labelledby="onboard-title" hidden>
+        <div class="section-head">
+            <div>
+                <h2 id="onboard-title">Langkah awal</h2>
+                <p class="muted"><?= $onboardDone ?> dari <?= count($onboard) ?> selesai. Tidak ada yang wajib, lakukan semampumu.</p>
+            </div>
+            <button type="button" class="link-btn" id="onboard-close">Sembunyikan</button>
+        </div>
+        <span class="onboard-bar" aria-hidden="true"><i style="width: <?= round($onboardDone / count($onboard) * 100) ?>%"></i></span>
+        <ol class="onboard-list">
+            <?php foreach ($onboard as $i => $st): ?>
+                <li class="<?= $st[3] ? "is-done" : "" ?>">
+                    <span class="onboard-check" aria-hidden="true"><?= $st[3] ? "✓" : $i + 1 ?></span>
+                    <span class="onboard-text"><strong><?= h($st[0]) ?></strong><small><?= h($st[1]) ?></small></span>
+                    <?php if (!$st[3]): ?><a class="btn btn-outline btn-small" href="<?= h($st[2]) ?>"><?= h($st[4]) ?></a><?php else: ?><span class="muted onboard-ok">Selesai</span><?php endif; ?>
+                </li>
+            <?php endforeach; ?>
+        </ol>
+        <p class="muted card-foot">Bingung? Tanya asisten di pojok layar, misalnya "Bagaimana cara memakai MoodJourney dari awal?"</p>
+    </section>
+    <script>
+    (function () {
+        var el = document.getElementById("onboard");
+        if (!el) return;
+        var hide = false;
+        try { hide = localStorage.getItem("mj-onboard-hide") === "1"; } catch (e) {}
+        el.hidden = hide;
+        document.getElementById("onboard-close").addEventListener("click", function () {
+            el.hidden = true;
+            try { localStorage.setItem("mj-onboard-hide", "1"); } catch (e) {}
+        });
+    })();
+    </script>
+    <?php endif; ?>
+
+    <?php
+    $guideSteps = [
+        ["📝", "Catat mood", "Klik \"Catat mood\", pilih emoji yang paling pas, geser kekuatan perasaannya (1 sampai 5), tandai aktivitas, lalu simpan. Cerita dan foto (maksimal 4) boleh dikosongkan.", "/diary.php", "Catat mood"],
+        ["🦋", "Rawat kupu-kupumu", "Setiap hari yang kamu catat membuat kupu-kupu tumbuh: telur, ulat, kepompong, lalu kupu-kupu. Satu hari terlewat tiap minggu dimaafkan.", "/metamorfosis.php", "Lihat perjalanan"],
+        ["🔎", "Lihat polamu", "Riwayat untuk mencari catatan lama. Wawasan berisi grafik, ringkasan mingguan, target, pencapaian, dan kalender setahun.", "/statistics.php", "Buka Wawasan"],
+        ["🎯", "Buat target kecil", "Pilih aktivitas dan berapa hari per minggu. Progresnya terlihat di dashboard.", "/target.php", "Buat target"],
+        ["💬", "Butuh bantuan?", "Tanya asisten di pojok layar kapan saja. Untuk bicara dengan orang, buka Dukungan (chat dengan tim atau konselor).", "/dukungan.php", "Buka Dukungan"],
+    ];
+    ?>
+    <section class="card guide" id="guide">
+        <details <?= $total === 0 ? "open" : "" ?>>
+            <summary>
+                <span class="guide-title"><span aria-hidden="true">📖</span> Cara memakai MoodJourney</span>
+                <span class="guide-sub muted">5 langkah singkat</span>
+            </summary>
+            <ol class="guide-steps">
+                <?php foreach ($guideSteps as $i => $g): ?>
+                    <li>
+                        <span class="guide-icon" aria-hidden="true"><?= $g[0] ?></span>
+                        <div class="guide-body">
+                            <strong><?= $i + 1 ?>. <?= h($g[1]) ?></strong>
+                            <p><?= h($g[2]) ?></p>
+                        </div>
+                        <a class="btn btn-outline btn-small" href="<?= h($g[3]) ?>"><?= h($g[4]) ?></a>
+                    </li>
+                <?php endforeach; ?>
+            </ol>
+            <p class="muted card-foot">Semua langkah ini opsional. Mulai dari yang paling nyaman buatmu.</p>
+        </details>
     </section>
 
     <section class="garden" aria-label="Taman kupu-kupu">

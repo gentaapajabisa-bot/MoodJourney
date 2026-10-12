@@ -114,4 +114,8 @@ switch ($action) {
         flash("error", "Aksi tidak dikenal.");
 }
 
+$back = (string) ($_POST["back"] ?? "");
+if ($back === "profil" && $userId > 0 && $action !== "delete") {
+    redirect("/admin/profil.php?id=" . $userId);
+}
 redirect("/admin/");

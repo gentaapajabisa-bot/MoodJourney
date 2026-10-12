@@ -64,6 +64,7 @@ $routes = [
     "admin/index"    => "admin/index",
     "admin/chat"     => "admin/chat",
     "admin/user"     => "admin/user",
+    "admin/profil"   => "admin/profile",
 ];
 
 $page = $routes[$route] ?? null;

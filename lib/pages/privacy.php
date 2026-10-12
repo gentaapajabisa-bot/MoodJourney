@@ -22,7 +22,7 @@ page_header("Privasi", ["nav" => nav_for($user)]);
             <li><strong>Foto</strong> pada catatan hanya bisa dilihat olehmu. Admin dan konselor tidak bisa membukanya. Foto dikecilkan di perangkatmu sebelum diunggah, sehingga data lokasi di dalam foto ikut hilang.</li>
             <li><strong>Chat dengan tim</strong> bisa dibaca admin. Kalau kamu mengajukan bicara dengan konselor, konselor yang menangani permintaanmu juga bisa membaca percakapan itu, dan namamu baru terlihat olehnya setelah ia mengambil permintaan. Jangan kirim data yang sangat pribadi lewat chat.</li>
             <li><strong>Tanda krisis.</strong> Pesan chat atau permintaan konselor yang memuat kata-kata tertentu terkait bahaya terhadap diri sendiri diberi penanda agar staf membacanya lebih dulu. Kalau catatan diary-mu memuat kata-kata seperti itu, kamu hanya akan melihat pesan dukungan, dan isi catatan tidak dikirim ke siapa pun.</li>
-            <li><strong>Asisten FAQ</strong> menjawab dari panduan tetap, bukan AI, dan percakapannya tidak disimpan.</li>
+            <li><strong>Asisten</strong> menjawab dari panduan tetap. Untuk pertanyaan di luar panduan, asisten dapat memakai AI; yang dikirim hanya pertanyaan yang kamu ketik, tidak pernah isi diary. Percakapannya tidak disimpan.</li>
             <li><strong>Ruang tenang</strong>: suara dibuat di perangkatmu dan tidak ada data yang dikirim.</li>
             <li>Pengelola teknis yang punya akses langsung ke database secara teknis bisa melihat isi data. Karena itu, hindari menulis informasi yang bisa membahayakanmu kalau bocor, seperti password atau nomor kartu.</li>
         </ul>

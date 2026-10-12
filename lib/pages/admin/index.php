@@ -66,7 +66,7 @@ $pages = max(1, (int) ceil($totalMatch / $perPage));
 $page = max(1, min($pages, (int) ($_GET["page"] ?? 1)));
 
 $users = db_all(
-    "SELECT u.id, u.name, u.email, u.is_active, u.created_at, u.last_login_at,
+    "SELECT u.id, u.name, u.email, u.is_active, u.created_at, u.last_login_at, u.avatar_v,
             (SELECT COUNT(*) FROM diary d WHERE d.user_id = u.id) AS entries
      FROM users u WHERE $where ORDER BY u.created_at DESC LIMIT ? OFFSET ?",
     $types . "ii",
@@ -102,14 +102,30 @@ $rooms = db_all(
      ORDER BY flagged DESC, unread DESC, r.last_message_at DESC, r.id DESC LIMIT 100"
 );
 
+$attention = (int) db_value("SELECT COUNT(*) FROM support_requests WHERE status IN ('waiting','active') AND urgent = 1", "", [], 0);
+$waiting = count(array_filter($supportRequests, fn($r) => $r["status"] === "waiting"));
+$newUsers7 = (int) db_value("SELECT COUNT(*) FROM users WHERE role = 'user' AND created_at >= ?", "s", [date("Y-m-d", strtotime("-6 days"))], 0);
+
 page_header("Admin", ["nav" => "admin", "active" => "admin"]);
 ?>
 <div class="container">
 
-    <section class="page-title">
-        <h1>Panel admin</h1>
-        <p class="muted">Kelola pengguna dan percakapan. Catatan diary pengguna tidak ditampilkan di sini.</p>
+    <section class="adm-hero">
+        <div class="adm-hero-text">
+            <span class="adm-eyebrow">Panel admin</span>
+            <h1>Halo, <?= h($admin["name"]) ?></h1>
+            <p>Kelola pengguna, dukungan, dan percakapan. Isi catatan diary pengguna tidak pernah ditampilkan di sini.</p>
+        </div>
+        <div class="adm-hero-art" aria-hidden="true"><span>🦋</span><span>🌿</span><span>✨</span></div>
     </section>
+
+    <nav class="adm-nav" aria-label="Bagian panel admin">
+        <a href="#ringkasan">Ringkasan</a>
+        <a href="#dukungan">Dukungan<?php if ($waiting): ?> <span class="badge"><?= $waiting ?></span><?php endif; ?></a>
+        <a href="#konselor">Konselor</a>
+        <a href="#chat">Chat<?php if ($unread): ?> <span class="badge"><?= $unread ?></span><?php endif; ?></a>
+        <a href="#pengguna">Pengguna</a>
+    </nav>
 
     <?php if ($defaultPassword): ?>
         <div class="notice notice-error" role="alert">
@@ -129,14 +145,15 @@ page_header("Admin", ["nav" => "admin", "active" => "admin"]);
         </section>
     <?php endif; ?>
 
-    <section class="grid-3 stats-4">
-        <div class="stat-card" data-tilt="6"><span class="muted">Pengguna aktif</span><span class="number"><?= $activeUsers ?></span><span class="stat-note">dari <?= $totalUsers ?> terdaftar</span></div>
-        <div class="stat-card" data-tilt="6"><span class="muted">Catatan 7 hari</span><span class="number"><?= $diary7 ?></span><span class="stat-note">total <?= $totalDiary ?></span></div>
-        <div class="stat-card" data-tilt="6"><span class="muted">Chat belum dibaca</span><span class="number"><?= $unread ?></span><span class="stat-note"><?= count($rooms) ?> percakapan</span></div>
+    <section class="adm-stats" id="ringkasan">
+        <div class="adm-stat"><span class="adm-stat-icon is-lilac" aria-hidden="true">👥</span><div><span class="adm-stat-n"><?= $activeUsers ?></span><span class="adm-stat-l">Pengguna aktif</span><small>dari <?= $totalUsers ?> terdaftar · +<?= $newUsers7 ?> minggu ini</small></div></div>
+        <div class="adm-stat"><span class="adm-stat-icon is-mint" aria-hidden="true">📝</span><div><span class="adm-stat-n"><?= $diary7 ?></span><span class="adm-stat-l">Catatan 7 hari</span><small>total <?= $totalDiary ?> catatan</small></div></div>
+        <div class="adm-stat"><span class="adm-stat-icon is-sky" aria-hidden="true">💬</span><div><span class="adm-stat-n"><?= $unread ?></span><span class="adm-stat-l">Chat belum dibaca</span><small><?= count($rooms) ?> percakapan</small></div></div>
+        <div class="adm-stat <?= $attention ? "is-alert" : "" ?>"><span class="adm-stat-icon is-peach" aria-hidden="true">⚠️</span><div><span class="adm-stat-n"><?= $attention ?></span><span class="adm-stat-l">Perlu perhatian</span><small><?= $waiting ?> permintaan menunggu</small></div></div>
     </section>
 
     <section class="grid-2">
-        <div class="card">
+        <div class="card adm-card">
             <h2>Catatan per hari</h2>
             <p class="muted">14 hari terakhir, seluruh pengguna.</p>
             <?= html_columns($dayItems) ?>
@@ -191,7 +208,7 @@ page_header("Admin", ["nav" => "admin", "active" => "admin"]);
     </section>
     <?php endif; ?>
 
-    <section class="card" id="konselor">
+    <section class="card adm-card" id="dukungan">
         <h2>Permintaan bicara dengan konselor</h2>
         <?php if (!$activeCounselors): ?>
             <div class="notice notice-info">Belum ada konselor aktif. Tambahkan akun konselor di bawah supaya fitur ini bisa dipakai pengguna.</div>
@@ -241,7 +258,7 @@ page_header("Admin", ["nav" => "admin", "active" => "admin"]);
         <?php endif; ?>
     </section>
 
-    <section class="card">
+    <section class="card adm-card" id="konselor">
         <h2>Konselor (<?= count($counselors) ?>)</h2>
         <p class="muted">Konselor hanya bisa membuka percakapan pengguna yang permintaannya ia ambil atau yang kamu tugaskan kepadanya.</p>
 
@@ -294,7 +311,7 @@ page_header("Admin", ["nav" => "admin", "active" => "admin"]);
         </form>
     </section>
 
-    <section class="card">
+    <section class="card adm-card" id="chat">
         <h2>Chat pengguna</h2>
         <?php if (!$rooms): ?>
             <div class="empty">Belum ada percakapan.</div>
@@ -319,7 +336,7 @@ page_header("Admin", ["nav" => "admin", "active" => "admin"]);
         <?php endif; ?>
     </section>
 
-    <section class="card">
+    <section class="card adm-card" id="pengguna">
         <div class="section-head">
             <h2>Pengguna (<?= $totalMatch ?>)</h2>
             <form class="inline-search" method="GET" action="/admin/">
@@ -338,12 +355,18 @@ page_header("Admin", ["nav" => "admin", "active" => "admin"]);
                 <tbody>
                 <?php foreach ($users as $u): $active = (int) $u["is_active"] === 1; ?>
                     <tr>
-                        <td><?= h($u["name"]) ?><br><span class="muted"><?= h($u["email"]) ?></span></td>
+                        <td>
+                            <a class="adm-user" href="/admin/profil.php?id=<?= (int) $u["id"] ?>">
+                                <?= admin_avatar_html($u, 40) ?>
+                                <span><strong><?= h($u["name"]) ?></strong><small class="muted"><?= h($u["email"]) ?></small></span>
+                            </a>
+                        </td>
                         <td><?= h(date_id($u["created_at"])) ?></td>
                         <td><?= $u["last_login_at"] ? h(date_id($u["last_login_at"])) : "–" ?></td>
                         <td><?= (int) $u["entries"] ?></td>
                         <td><span class="admin-badge <?= $active ? "" : "is-muted" ?>"><?= $active ? "Aktif" : "Nonaktif" ?></span></td>
                         <td class="row-actions">
+                            <a class="btn btn-small" href="/admin/profil.php?id=<?= (int) $u["id"] ?>">Profil</a>
                             <form method="POST" action="/admin/user.php">
                                 <?= csrf_field() ?>
                                 <input type="hidden" name="action" value="toggle_active">

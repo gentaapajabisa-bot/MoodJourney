@@ -8,7 +8,17 @@ if ($user === null) {
     exit;
 }
 
-$row = db_one("SELECT mime, data FROM user_avatars WHERE user_id = ? LIMIT 1", "i", [(int) $user["id"]]);
+$ownerId = (int) $user["id"];
+if (isset($_GET["u"]) && (int) $_GET["u"] !== $ownerId) {
+    // hanya admin yang boleh melihat foto profil akun lain
+    if ($user["role"] !== "admin") {
+        http_response_code(403);
+        exit;
+    }
+    $ownerId = (int) $_GET["u"];
+}
+
+$row = db_one("SELECT mime, data FROM user_avatars WHERE user_id = ? LIMIT 1", "i", [$ownerId]);
 
 if (!$row || !in_array($row["mime"], ["image/jpeg", "image/png", "image/webp"], true)) {
     http_response_code(404);

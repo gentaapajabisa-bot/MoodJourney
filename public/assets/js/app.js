@@ -502,8 +502,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 fd.append("_csrf", csrf);
                 fd.append("q", q);
                 const res = await fetch(endpoint, { method: "POST", body: fd, credentials: "same-origin" });
-                const data = await res.json();
+                let data;
+                try { data = await res.json(); } catch (e) { data = null; }
                 typing.remove();
+                if (!data) {
+                    addMsg(res.status === 429 ? "Pelan-pelan ya. Coba lagi sebentar lagi." : "Jawabannya belum sampai. Coba kirim ulang pertanyaanmu.", "bot");
+                    addLinks([["Chat dengan tim", "/chat.php"]], false);
+                    return;
+                }
                 const msg = addMsg(data.reply || "Maaf, ada gangguan. Coba lagi.", "bot" + (data.crisis ? " crisis" : ""));
                 if (data.crisis) msg.setAttribute("role", "alert");
                 if (data.ai) {
@@ -513,9 +519,23 @@ document.addEventListener("DOMContentLoaded", () => {
                     msg.appendChild(note);
                 }
                 addLinks(data.links, !!data.crisis);
+                if (Array.isArray(data.suggest) && data.suggest.length) {
+                    const wrap = document.createElement("div");
+                    wrap.className = "bot-links bot-suggest";
+                    data.suggest.slice(0, 6).forEach((text) => {
+                        const b = document.createElement("button");
+                        b.type = "button";
+                        b.className = "btn btn-small btn-outline";
+                        b.textContent = text;
+                        b.addEventListener("click", () => ask(text));
+                        wrap.appendChild(b);
+                    });
+                    list.appendChild(wrap);
+                    scroll();
+                }
             } catch (e) {
                 typing.remove();
-                addMsg("Maaf, asisten sedang tidak bisa dihubungi. Kamu bisa mengirim pesan lewat chat dengan tim.", "bot");
+                addMsg("Koneksimu sepertinya terputus. Coba kirim ulang, atau kirim pesan lewat chat dengan tim.", "bot");
                 addLinks([["Chat dengan tim", "/chat.php"]], false);
             } finally {
                 busy = false;
