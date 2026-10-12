@@ -4129,3 +4129,11 @@ body.has-stageup {
 .adm-card .table-wrap { max-width: 100%; -webkit-overflow-scrolling: touch; }
 .adm-card .row-actions { flex-wrap: wrap; }
 .table-wrap { position: relative; }
+
+/* LOGO KUPU-KUPU */
+.logo { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; }
+.logo-mark { width: 34px; height: 34px; flex: none; transform-origin: 50% 60%; transition: transform 0.4s ease; }
+.logo:hover .logo-mark { transform: rotate(-8deg) scale(1.08); }
+.logo-text > span { color: var(--primary); }
+@media (prefers-reduced-motion: reduce) { .logo-mark, .logo:hover .logo-mark { transition: none; transform: none; } }
+.logo .logo-text { color: inherit; }

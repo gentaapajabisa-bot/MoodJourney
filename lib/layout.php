@@ -71,6 +71,7 @@ function page_header(string $title, array $opts = []): void
 
     <meta name="theme-color" content="#6d5ce8">
     <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="icon" type="image/svg+xml" href="/assets/icons/logo.svg">
     <link rel="icon" type="image/png" href="/assets/icons/icon-192.png">
     <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
 
@@ -101,8 +102,9 @@ function page_header(string $title, array $opts = []): void
 
 <?php if ($nav !== "none"): ?>
 <nav class="navbar" aria-label="Navigasi utama">
-    <a href="<?= $user ? h(home_for($user)) : "/" ?>" class="logo">
-        Mood<span>Journey</span>
+    <a href="<?= $user ? h(home_for($user)) : "/" ?>" class="logo" aria-label="MoodJourney, beranda">
+        <svg class="logo-mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><defs><linearGradient id="lg-a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9b8cf5"/><stop offset="1" stop-color="#6d5ce8"/></linearGradient><linearGradient id="lg-b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8fd5b8"/><stop offset="1" stop-color="#7fb8f0"/></linearGradient></defs><path d="M31 29 C 24 12, 6 8, 5 21 C 4 31, 15 37, 31 34 Z" fill="url(#lg-a)"/><path d="M33 29 C 40 12, 58 8, 59 21 C 60 31, 49 37, 33 34 Z" fill="url(#lg-a)"/><path d="M31 36 C 20 36, 11 42, 14 51 C 17 58, 28 54, 31 43 Z" fill="url(#lg-b)"/><path d="M33 36 C 44 36, 53 42, 50 51 C 47 58, 36 54, 33 43 Z" fill="url(#lg-b)"/><circle cx="16" cy="22" r="3.2" fill="#fff" opacity=".55"/><circle cx="48" cy="22" r="3.2" fill="#fff" opacity=".55"/><rect x="30" y="22" width="4" height="26" rx="2" fill="#3d3566"/><path d="M31 23 C 29 16, 25 13, 22 12 M33 23 C 35 16, 39 13, 42 12" fill="none" stroke="#3d3566" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <span class="logo-text">Mood<span>Journey</span></span>
     </a>
 
     <button class="menu-toggle" type="button" aria-label="Buka menu" aria-expanded="false">☰</button>
