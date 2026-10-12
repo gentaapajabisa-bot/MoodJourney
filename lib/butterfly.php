@@ -339,3 +339,36 @@ function stage_up_overlay_html(string $from, string $to, array $colors, bool $au
     <?php
     return (string) ob_get_clean();
 }
+
+/** Warna pastel: campur dengan putih ($t 0..1). */
+function butterfly_pastel(array $colors, float $t = 0.3): array
+{
+    return array_map(function ($hex) use ($t) {
+        $hex = ltrim((string) $hex, "#");
+        if (strlen($hex) !== 6 || !ctype_xdigit($hex)) {
+            return BUTTERFLY_DEFAULT_COLORS[0];
+        }
+        $out = "#";
+        foreach ([0, 2, 4] as $i) {
+            $v = hexdec(substr($hex, $i, 2));
+            $out .= sprintf("%02x", (int) round($v + (255 - $v) * $t));
+        }
+        return $out;
+    }, array_slice($colors, 0, 2));
+}
+
+/** Bunga kecil untuk adegan halaman depan (SVG). Deterministik lewat $seed. */
+function scene_flower_svg(int $seed): string
+{
+    $pal = ["#ffc2d9", "#ffe4a8", "#d6c9ff", "#bfe3ff", "#ffcfb8"];
+    $c = $pal[$seed % count($pal)];
+    $petals = "";
+    for ($p = 0; $p < 6; $p++) {
+        $a = $p / 6 * M_PI * 2;
+        $petals .= '<circle cx="' . round(20 + cos($a) * 8, 1) . '" cy="' . round(16 + sin($a) * 8, 1) . '" r="6" fill="' . $c . '"/>';
+    }
+    return '<svg viewBox="0 0 40 90" width="40" height="90" aria-hidden="true">'
+        . '<path d="M20 90 C 20 66, 22 44, 20 22" fill="none" stroke="#9fd8b4" stroke-width="3" stroke-linecap="round"/>'
+        . '<path d="M20 62 C 8 58, 6 50, 8 46 C 16 46, 20 54, 20 62 Z" fill="#b7e4c6"/>'
+        . $petals . '<circle cx="20" cy="16" r="4.5" fill="#ffd98a"/></svg>';
+}

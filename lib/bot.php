@@ -146,6 +146,13 @@ const BOT_KB = [
         "links" => [["Lihat metamorfosis", "/metamorfosis.php"]],
     ],
     [
+        "id" => "setahun",
+        "q" => "Apa itu kalender setahun?",
+        "keys" => ["setahun", "year in pixels", "piksel", "kalender tahunan", "kalender setahun", "satu tahun"],
+        "a" => "Kalender setahun menampilkan satu kotak berwarna untuk setiap hari. Buka Wawasan → Setahun. Warnanya bisa diganti antara Skor dan Mood. Arahkan kursor atau sentuh sebuah kotak untuk melihat harinya, dan klik \"Unduh gambar\" untuk menyimpannya sebagai gambar (hanya warna, tanpa isi catatan).",
+        "links" => [["Buka setahun", "/setahun.php"]],
+    ],
+    [
         "id" => "ringkasan",
         "q" => "Apa itu ringkasan mingguan?",
         "keys" => ["ringkasan", "mingguan", "sorotan", "rekap"],

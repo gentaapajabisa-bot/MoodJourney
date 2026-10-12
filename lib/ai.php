@@ -24,6 +24,7 @@ const AI_LINKS = [
     "/target.php"              => "Target",
     "/pencapaian.php"          => "Pencapaian",
     "/metamorfosis.php"        => "Metamorfosis",
+    "/setahun.php"             => "Setahun",
     "/tenang.php"              => "Ruang tenang",
     "/dukungan.php"            => "Dukungan",
     "/dukungan.php#konselor"   => "Bicara dengan konselor",
@@ -60,12 +61,13 @@ Menampilkan sapaan, kartu "Perjalananmu" (kupu-kupu), mood rata-rata 7 hari tera
 - Setiap catatan punya tombol Ubah dan Hapus (yang dihapus tidak bisa dikembalikan).
 - Tombol "Unduh CSV" dan "Cetak / PDF" mengikuti filter yang aktif. Foto tidak ikut diekspor.
 
-5. WAWASAN (menu Wawasan, punya lima tab)
+5. WAWASAN (menu Wawasan, punya enam tab)
 - Statistik: tren mood, lanskap mood 3D, mood yang paling sering, pola per hari dalam seminggu, hubungan aktivitas dan mood (baru muncul setelah aktivitas tercatat minimal 3 kali, hanya kecenderungan bukan sebab-akibat), dan kalender. Skor mood 1 (berat) sampai 5 (sangat baik).
 - Ringkasan mingguan: rangkuman hari demi hari, sorotan, aktivitas, dan target minggu itu.
 - Target: pilih aktivitas dan berapa hari per minggu, lalu klik Tambah target. Progres dihitung dari tag aktivitas di catatan, Senin sampai Minggu.
 - Pencapaian: penanda perjalanan, misalnya 10 catatan atau 7 hari beruntun. Bukan kompetisi, hanya terlihat oleh pemilik akun.
 - Metamorfosis: lihat bagian 6.
+- Setahun: kalender "year in pixels", satu kotak berwarna untuk setiap hari dalam setahun (tab Setahun, atau tombol "Lihat setahun" di Statistik). Pewarnaan bisa diganti antara Skor (1 berat sampai 5 baik) dan Mood. Arahkan kursor atau sentuh kotak untuk melihat harinya, lalu klik "Lihat catatan" atau "Catat hari ini". Bisa pindah tahun dengan tombol panah, dan "Unduh gambar" menyimpan kalender sebagai PNG (hanya warna, tanpa isi catatan).
 
 6. METAMORFOSIS (STREAK KUPU-KUPU)
 - Setiap hari yang dicatat menambah satu hari perjalanan, dan kupu-kupu tumbuh: Telur (0-2 hari), Ulat (3-6), Kepompong (7-13), Kupu-kupu muda (14-29), Kupu-kupu dewasa (30 hari atau lebih).

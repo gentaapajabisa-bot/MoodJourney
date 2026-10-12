@@ -60,6 +60,7 @@ function page_header(string $title, array $opts = []): void
 
     <script>
         (function () {
+            document.documentElement.classList.add("js");
             try {
                 var saved = localStorage.getItem("mj-theme");
                 var dark = saved ? saved === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -190,7 +191,7 @@ if (is_array($su)) {
 <?php
 }
 
-/** Sub-navigasi untuk halaman Wawasan. $active: stats | weekly | goals | badges | butterfly */
+/** Sub-navigasi untuk halaman Wawasan. $active: stats | weekly | goals | badges | butterfly | year */
 function insights_tabs(string $active): void
 {
     $tabs = [
@@ -199,6 +200,7 @@ function insights_tabs(string $active): void
         "goals"   => ["/target.php", "Target"],
         "badges"  => ["/pencapaian.php", "Pencapaian"],
         "butterfly" => ["/metamorfosis.php", "Metamorfosis"],
+        "year"    => ["/setahun.php", "Setahun"],
     ];
     echo '<nav class="segmented insights-tabs" aria-label="Wawasan">';
     foreach ($tabs as $key => [$href, $label]) {

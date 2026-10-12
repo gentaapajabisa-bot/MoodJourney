@@ -239,6 +239,7 @@ page_header("Statistik", ["active" => "statistics"]);
         <div class="section-head">
             <h2>Kalender <?= h(month_id($ym)) ?></h2>
             <div class="header-actions">
+                <a class="btn btn-outline btn-small" href="/setahun.php">Lihat setahun</a>
                 <a class="btn btn-outline btn-small" href="/statistics.php?range=<?= $range ?>&m=<?= h($prevYm) ?>" aria-label="Bulan sebelumnya">←</a>
                 <?php if (!$isCurrentMonth): ?>
                     <a class="btn btn-outline btn-small" href="/statistics.php?range=<?= $range ?>&m=<?= h($nextYm) ?>" aria-label="Bulan berikutnya">→</a>

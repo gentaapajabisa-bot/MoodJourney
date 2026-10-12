@@ -42,6 +42,7 @@ $routes = [
     "target"         => "goals",
     "pencapaian"     => "achievements",
     "metamorfosis"   => "butterfly",
+    "setahun"        => "year",
     "cron/reminder"  => "cron_reminder",
     "dukungan"       => "support",
     "bot"            => "bot",
