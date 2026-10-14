@@ -37,6 +37,10 @@ $recent = db_all(
 attach_photo_ids($recent, $userId);
 
 $showSupport = needs_support_hint($userId);
+$memories = memories_today($userId);
+$challenge = challenge_current($userId);
+$lettersReady = letters_ready_count($userId);
+$heavyMood = recent_heavy_mood($userId);
 $journey = journey_load($userId);
 
 $goals = array_slice(goals_with_progress($userId), 0, 3);
@@ -150,6 +154,7 @@ page_header("Dashboard", ["active" => "dashboard"]);
             <span><?= garden_butterfly_count($journey["days"]) ?> kupu-kupu · gerakkan kursor atau sentuh untuk memanggil mereka</span>
         </div>
         <a class="garden-link" href="/metamorfosis.php">Lihat perjalananmu →</a>
+        <a class="garden-share btn btn-small" href="/bagikan.php">🦋 Bagikan</a>
     </section>
 
     <?php if (!$streak["today_done"]): ?>
@@ -164,6 +169,62 @@ page_header("Dashboard", ["active" => "dashboard"]);
             <a class="btn btn-small" href="/diary.php">Catat sekarang</a>
         </div>
     <?php endif; ?>
+
+    <?php if (!$streak["today_done"]): ?>
+        <section class="card dash-quick" aria-label="Check-in cepat">
+            <span>Check-in 5 detik</span>
+            <form method="POST" action="/cepat.php">
+                <?= csrf_field() ?>
+                <?php foreach (MOODS as $emoji => $m): ?>
+                    <button type="submit" name="mood" value="<?= h($emoji) ?>" aria-label="<?= h($m["label"]) ?>" title="<?= h($m["label"]) ?>"><?= h($emoji) ?></button>
+                <?php endforeach; ?>
+            </form>
+        </section>
+    <?php endif; ?>
+
+    <?php if ($heavyMood !== null): ?>
+        <section class="card care-card" aria-label="Mau ditemani">
+            <h2>Mau ditemani sebentar? 🤍</h2>
+            <p class="muted">Terima kasih sudah jujur pada perasaanmu. Kamu tidak harus menghadapi hari yang berat sendirian.</p>
+            <div class="care-actions">
+                <a class="btn btn-small" href="/tenang.php">Latihan napas</a>
+                <a class="btn btn-outline btn-small" href="/dukungan.php#konselor">Bicara dengan konselor</a>
+                <a class="btn btn-outline btn-small" href="/bantuan.php">Layanan bantuan</a>
+            </div>
+        </section>
+    <?php endif; ?>
+
+    <?php if ($lettersReady > 0): ?>
+        <div class="notice notice-info letter-banner">
+            <span>💌 Ada <?= $lettersReady ?> surat dari dirimu yang sudah boleh dibuka.</span>
+            <a class="btn btn-small" href="/surat.php">Buka surat</a>
+        </div>
+    <?php endif; ?>
+
+    <section class="dash-extra">
+        <?php if ($memories): ?>
+        <div class="card">
+            <h2>🕰️ Pada hari ini</h2>
+            <?php foreach ($memories as $m): ?>
+                <a class="mem-item" href="/history.php?from=<?= h($m["date"]) ?>&amp;to=<?= h($m["date"]) ?>" style="text-decoration:none;color:inherit">
+                    <span class="mem-emoji" aria-hidden="true"><?= h($m["mood"]) ?></span>
+                    <span><small><?= h($m["label"]) ?> · <?= h(date_id($m["date"])) ?></small>
+                        <?php if ($m["note"] !== ""): ?><p><?= h($m["note"]) ?></p><?php endif; ?></span>
+                </a>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
+
+        <a class="card dash-chal" href="/tantangan.php" style="text-decoration:none;color:inherit">
+            <span class="challenge-icon" aria-hidden="true"><?= $challenge["def"]["icon"] ?></span>
+            <span style="flex:1;min-width:0">
+                <small class="muted">Tantangan minggu ini</small><br>
+                <strong><?= h($challenge["def"]["title"]) ?></strong>
+                <span class="onboard-bar" aria-hidden="true"><i style="width: <?= round($challenge["progress"] / max(1, $challenge["target"]) * 100) ?>%"></i></span>
+                <small class="muted"><?= $challenge["done"] ? "Selesai 🎉" : $challenge["progress"] . " dari " . $challenge["target"] ?></small>
+            </span>
+        </a>
+    </section>
 
     <?php if ($showSupport): ?>
         <aside class="support-card" aria-label="Dukungan">

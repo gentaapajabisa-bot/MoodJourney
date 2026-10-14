@@ -124,6 +124,8 @@ function page_header(string $title, array $opts = []): void
             <a href="/admin/" <?= $active === "admin" ? 'aria-current="page"' : "" ?>>Ringkasan
                 <span class="badge" data-unread-badge <?= $unread > 0 ? "" : "hidden" ?>><?= $unread ?></span>
             </a>
+            <a href="/admin/laporan.php" <?= $active === "admin-report" ? 'aria-current="page"' : "" ?>>Laporan</a>
+            <a href="/admin/status.php" <?= $active === "admin-status" ? 'aria-current="page"' : "" ?>>Status</a>
             <a href="/profile.php" class="nav-profile" <?= $active === "profile" ? 'aria-current="page"' : "" ?>><?= avatar_html($user, 26) ?> Profil</a>
             <span class="admin-badge">Admin</span>
         <?php elseif ($nav === "counselor" && $user): $unread = unread_count_for($user); ?>
@@ -193,7 +195,7 @@ if (is_array($su)) {
 <?php
 }
 
-/** Sub-navigasi untuk halaman Wawasan. $active: stats | weekly | goals | badges | butterfly | year */
+/** Sub-navigasi untuk halaman Wawasan. $active: stats | weekly | goals | badges | butterfly | year | pattern | share */
 function insights_tabs(string $active): void
 {
     $tabs = [
@@ -203,6 +205,10 @@ function insights_tabs(string $active): void
         "badges"  => ["/pencapaian.php", "Pencapaian"],
         "butterfly" => ["/metamorfosis.php", "Metamorfosis"],
         "year"    => ["/setahun.php", "Setahun"],
+        "challenge" => ["/tantangan.php", "Tantangan"],
+        "collection" => ["/koleksi.php", "Koleksi"],
+        "letters" => ["/surat.php", "Surat"],
+        "share"   => ["/bagikan.php", "Bagikan"],
         "pattern" => ["/pola.php", "Pola"],
     ];
     echo '<nav class="segmented insights-tabs" aria-label="Wawasan">';

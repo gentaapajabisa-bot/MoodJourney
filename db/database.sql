@@ -20,6 +20,8 @@ CREATE TABLE IF NOT EXISTS users (
     reminder_email TINYINT(1) NOT NULL DEFAULT 0,
     last_reminded_on DATE NULL,
     avatar_v INT NULL,
+    pin_hash VARCHAR(255) NULL,
+    last_pushed_on DATE NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
@@ -145,4 +147,47 @@ SELECT 'Admin MoodJourney', 'admin@moodjourney.test',
        '$2y$10$9gTRGTvMdfwTvkaTCqULaeXgCz3EGiTKkZcMWrwgCSbUjJhBHpb7y', 'admin'
 WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = 'admin@moodjourney.test');
 
-REPLACE INTO app_meta (k, v) VALUES ('schema_version', '5');
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    endpoint_hash CHAR(64) NOT NULL,
+    endpoint TEXT NOT NULL,
+    p256dh VARCHAR(160) NOT NULL,
+    auth VARCHAR(60) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_push_endpoint (endpoint_hash),
+    INDEX idx_push_user (user_id)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS letters (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    body TEXT NOT NULL,
+    open_on DATE NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    opened_at DATETIME NULL,
+    INDEX idx_letters_user (user_id, open_on)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS butterfly_collection (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    stage VARCHAR(10) NOT NULL,
+    mood VARCHAR(30) NULL,
+    c1 CHAR(7) NOT NULL,
+    c2 CHAR(7) NOT NULL,
+    earned_on DATE NOT NULL,
+    UNIQUE KEY uq_collection (user_id, stage, earned_on),
+    INDEX idx_collection_user (user_id)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS challenge_done (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    week_start DATE NOT NULL,
+    code VARCHAR(30) NOT NULL,
+    done_on DATE NOT NULL,
+    UNIQUE KEY uq_challenge (user_id, week_start)
+) ENGINE=InnoDB;
+
+REPLACE INTO app_meta (k, v) VALUES ('schema_version', '6');

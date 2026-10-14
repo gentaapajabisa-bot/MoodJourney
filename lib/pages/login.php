@@ -34,6 +34,7 @@ if (is_post()) {
             } else {
                 session_regenerate_id(true);
                 $_SESSION["user_id"] = (int) $user["id"];
+                pin_unlock();
                 $_SESSION["name"] = $user["name"];
                 $_SESSION["role"] = $user["role"];
                 unset($_SESSION["csrf"]);

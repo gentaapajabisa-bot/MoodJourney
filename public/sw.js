@@ -4,7 +4,7 @@
  * - Halaman: SELALU lewat jaringan. Halaman berisi data pribadi tidak pernah disimpan di cache.
  *   Kalau offline, ditampilkan /offline.html.
  */
-const VERSION = "mj-v13";
+const VERSION = "mj-v14";
 const STATIC_CACHE = "mj-static-" + VERSION;
 const PRECACHE = ["/offline.html", "/assets/css/style.css", "/assets/js/app.js", "/assets/icons/icon-192.png"];
 
@@ -33,7 +33,23 @@ self.addEventListener("fetch", (event) => {
         return;
     }
 
-    // Aset statis: ambil dari cache, perbarui di latar belakang
+    // CSS dan JS: jaringan dulu supaya pembaruan langsung terlihat, cache hanya cadangan offline
+    if (url.pathname.startsWith("/assets/") && /\.(css|js)$/.test(url.pathname)) {
+        event.respondWith(
+            fetch(req)
+                .then((res) => {
+                    if (res && res.ok) {
+                        const copy = res.clone();
+                        caches.open(STATIC_CACHE).then((c) => c.put(req, copy));
+                    }
+                    return res;
+                })
+                .catch(() => caches.match(req))
+        );
+        return;
+    }
+
+    // Aset lain (ikon, gambar): ambil dari cache, perbarui di latar belakang
     if (url.pathname.startsWith("/assets/")) {
         event.respondWith(
             caches.open(STATIC_CACHE).then((cache) =>
@@ -52,18 +68,35 @@ self.addEventListener("fetch", (event) => {
     // selain itu (chat/poll, dsb.) langsung ke jaringan
 });
 
-// Klik pada notifikasi pengingat membuka halaman catat mood
+// Notifikasi push dari server
+self.addEventListener("push", (event) => {
+    let data = {};
+    try { data = event.data ? event.data.json() : {}; } catch (e) { data = { body: event.data ? event.data.text() : "" }; }
+    const title = data.title || "MoodJourney";
+    event.waitUntil(
+        self.registration.showNotification(title, {
+            body: data.body || "Sudah sempat mencatat mood hari ini?",
+            icon: "/assets/icons/icon-192.png",
+            badge: "/assets/icons/icon-192.png",
+            tag: "mj-push",
+            data: { url: typeof data.url === "string" && data.url.startsWith("/") ? data.url : "/diary.php" },
+        })
+    );
+});
+
+// Klik pada notifikasi membuka halaman tujuan (default: catat mood)
 self.addEventListener("notificationclick", (event) => {
     event.notification.close();
+    const target = (event.notification.data && event.notification.data.url) || "/diary.php";
     event.waitUntil(
         self.clients.matchAll({ type: "window", includeUninstalled: false }).then((clients) => {
             for (const c of clients) {
                 if ("focus" in c) {
-                    c.navigate("/diary.php");
+                    c.navigate(target);
                     return c.focus();
                 }
             }
-            return self.clients.openWindow("/diary.php");
+            return self.clients.openWindow(target);
         })
     );
 });

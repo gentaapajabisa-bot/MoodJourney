@@ -36,6 +36,9 @@ require_once __DIR__ . "/bot.php";
 require_once __DIR__ . "/photos.php";
 require_once __DIR__ . "/butterfly.php";
 require_once __DIR__ . "/patterns.php";
+require_once __DIR__ . "/webpush.php";
+require_once __DIR__ . "/features.php";
+require_once __DIR__ . "/zip.php";
 require_once __DIR__ . "/layout.php";
 
 function render_fatal(Throwable $e): void

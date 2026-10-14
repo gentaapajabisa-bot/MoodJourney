@@ -8,7 +8,7 @@
  * terkait dilakukan di kode aplikasi.
  */
 
-const SCHEMA_VERSION = 5;
+const SCHEMA_VERSION = 6;
 
 function column_exists(mysqli $db, string $table, string $column): bool
 {
@@ -259,6 +259,58 @@ function ensure_schema(mysqli $db): void
     add_column($db, "users", "reminder_email", "TINYINT(1) NOT NULL DEFAULT 0");
     add_column($db, "users", "last_reminded_on", "DATE NULL");
     add_column($db, "users", "avatar_v", "INT NULL");
+
+
+    // skema v6: notifikasi push, kunci PIN, surat untuk diri sendiri, koleksi kupu-kupu, tantangan mingguan
+    add_column($db, "users", "pin_hash", "VARCHAR(255) NULL");
+    add_column($db, "users", "last_pushed_on", "DATE NULL");
+    run_query($db,
+        "CREATE TABLE IF NOT EXISTS push_subscriptions (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT NOT NULL,
+            endpoint_hash CHAR(64) NOT NULL,
+            endpoint TEXT NOT NULL,
+            p256dh VARCHAR(160) NOT NULL,
+            auth VARCHAR(60) NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY uq_push_endpoint (endpoint_hash),
+            INDEX idx_push_user (user_id)
+        ) ENGINE=InnoDB"
+    );
+    run_query($db,
+        "CREATE TABLE IF NOT EXISTS letters (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT NOT NULL,
+            body TEXT NOT NULL,
+            open_on DATE NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            opened_at DATETIME NULL,
+            INDEX idx_letters_user (user_id, open_on)
+        ) ENGINE=InnoDB"
+    );
+    run_query($db,
+        "CREATE TABLE IF NOT EXISTS butterfly_collection (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT NOT NULL,
+            stage VARCHAR(10) NOT NULL,
+            mood VARCHAR(30) NULL,
+            c1 CHAR(7) NOT NULL,
+            c2 CHAR(7) NOT NULL,
+            earned_on DATE NOT NULL,
+            UNIQUE KEY uq_collection (user_id, stage, earned_on),
+            INDEX idx_collection_user (user_id)
+        ) ENGINE=InnoDB"
+    );
+    run_query($db,
+        "CREATE TABLE IF NOT EXISTS challenge_done (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT NOT NULL,
+            week_start DATE NOT NULL,
+            code VARCHAR(30) NOT NULL,
+            done_on DATE NOT NULL,
+            UNIQUE KEY uq_challenge (user_id, week_start)
+        ) ENGINE=InnoDB"
+    );
 
     // skema v5: satu catatan boleh punya banyak foto (hapus indeks UNIQUE lama, ganti indeks biasa)
     if (index_exists($db, "diary_photos", "uq_photo_diary")) {

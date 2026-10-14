@@ -112,18 +112,7 @@ if (is_post()) {
             flash("info", crisis_message() . " Kamu juga bisa mengajukan bicara dengan konselor di halaman Dukungan.");
         }
 
-        $journeyAfter = journey_load($userId);
-        $stageAfter = $journeyAfter["stage"];
-        $stageKeys = array_keys(BUTTERFLY_STAGES);
-        if (array_search($stageAfter, $stageKeys, true) > array_search($stageBefore, $stageKeys, true)) {
-            // diperagakan sebagai animasi menetas di halaman berikutnya (lihat page_footer)
-            $_SESSION["stage_up"] = ["from" => $stageBefore, "to" => $stageAfter, "colors" => $journeyAfter["colors"]];
-        }
-
-        $newAchievements = check_achievements($userId);
-        if ($newAchievements) {
-            flash("info", achievements_flash_text($newAchievements));
-        }
+        diary_after_save($userId, $stageBefore, $form["mood"]);
         redirect("/dashboard.php");
     }
 }

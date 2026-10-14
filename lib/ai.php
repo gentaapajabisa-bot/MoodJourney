@@ -27,6 +27,11 @@ const AI_LINKS = [
     "/setahun.php"             => "Setahun",
     "/pola.php"                => "Pola",
     "/bagikan.php"             => "Bagikan perjalanan",
+    "/surat.php"               => "Surat",
+    "/koleksi.php"             => "Koleksi",
+    "/tantangan.php"           => "Tantangan",
+    "/cepat.php"               => "Check-in cepat",
+    "/cadangan.php"            => "Cadangan",
     "/tenang.php"              => "Ruang tenang",
     "/dukungan.php"            => "Dukungan",
     "/dukungan.php#konselor"   => "Bicara dengan konselor",
@@ -72,6 +77,14 @@ Menampilkan sapaan, kartu "Perjalananmu" (kupu-kupu), mood rata-rata 7 hari tera
 - Setahun: kalender "year in pixels", satu kotak berwarna untuk setiap hari dalam setahun (tab Setahun, atau tombol "Lihat setahun" di Statistik). Pewarnaan bisa diganti antara Skor (1 berat sampai 5 baik) dan Mood. Arahkan kursor atau sentuh kotak untuk melihat harinya, lalu klik "Lihat catatan" atau "Catat hari ini". Bisa pindah tahun dengan tombol panah, dan "Unduh gambar" menyimpan kalender sebagai PNG (hanya warna, tanpa isi catatan).
 - Pola: tab Pola di Wawasan menunjukkan kecenderungan dari catatanmu 6 bulan terakhir: aktivitas yang biasanya menyertai hari yang lebih baik atau lebih berat, hari terbaik dan terberat dalam seminggu, dan tren 30 hari. Muncul setelah sekitar 14 hari tercatat. Dihitung dari angka saja tanpa membaca isi cerita, dan hanya menunjukkan hubungan, bukan sebab-akibat.
 - Bagikan perjalanan: di halaman Metamorfosis klik "Bagikan perjalananku" untuk membuat gambar kartu berisi kupu-kupu dan jumlah hari. Warna latar bisa dipilih, nama depan dan statistik boleh ditampilkan atau disembunyikan. Isi catatan, mood, dan foto tidak ikut. Tombol Bagikan membuka menu berbagi perangkat, atau pakai Unduh gambar.
+- Check-in cepat: satu ketukan emoji untuk mencatat mood hari ini (di dashboard atau /cepat.php). Cerita dan aktivitas bisa ditambahkan nanti lewat Riwayat → Ubah.
+- Pada hari ini: kartu di dashboard berisi catatan di tanggal yang sama 1 bulan sampai 3 tahun lalu, kalau ada.
+- Surat: tab Surat di Wawasan. Tulis pesan untuk dirimu di masa depan (30 hari, 3 bulan, 6 bulan, 1 tahun, atau tanggal sendiri). Isinya terkunci sampai tanggal itu, dan dashboard memberi tahu saat bisa dibuka.
+- Koleksi: tab Koleksi. Kupu-kupu yang mencapai tahap muda atau dewasa masuk koleksi; jenisnya mengikuti mood dominan (ada 8 jenis, misalnya Kupu Mentari dan Kupu Samudra).
+- Tantangan: tab Tantangan. Satu tantangan ringan tiap minggu (berganti Senin), kemajuan dihitung otomatis, tanpa hukuman kalau terlewat. Yang selesai menjadi lencana.
+- Kunci PIN: di Profil, pasang PIN 4 sampai 6 angka. Lupa PIN: keluar lalu masuk lagi dengan password.
+- Notifikasi push: di Profil bagian Pengingat. Pengingat malam hanya dikirim kalau hari itu belum mencatat, paling banyak sekali sehari. Di iPhone pasang dulu ke Layar Utama.
+- Cadangan lengkap: di Profil, unduh ZIP berisi catatan (teks dan CSV) beserta foto.
 
 6. METAMORFOSIS (STREAK KUPU-KUPU)
 - Setiap hari yang dicatat menambah satu hari perjalanan, dan kupu-kupu tumbuh: Telur (0-2 hari), Ulat (3-6), Kepompong (7-13), Kupu-kupu muda (14-29), Kupu-kupu dewasa (30 hari atau lebih).

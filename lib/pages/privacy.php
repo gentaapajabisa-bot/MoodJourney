@@ -18,7 +18,7 @@ page_header("Privasi", ["nav" => nav_for($user)]);
 
         <h2>Siapa yang bisa melihat</h2>
         <ul>
-            <li><strong>Catatan diary</strong> tidak ditampilkan di panel admin. Admin hanya melihat ringkasan gabungan, seperti jumlah pengguna dan sebaran mood tanpa nama.</li>
+            <li><strong>Catatan diary</strong> tidak ditampilkan di panel admin. Admin melihat ringkasan gabungan tanpa nama, dan di profil tiap akun hanya angka seperti jumlah catatan, streak, dan tahap kupu-kupu, tidak pernah isi diary, mood, atau fotonya. Surat untuk diri sendiri juga tidak bisa dibuka admin lewat aplikasi.</li>
             <li><strong>Foto</strong> pada catatan hanya bisa dilihat olehmu. Admin dan konselor tidak bisa membukanya. Foto dikecilkan di perangkatmu sebelum diunggah, sehingga data lokasi di dalam foto ikut hilang.</li>
             <li><strong>Chat dengan tim</strong> bisa dibaca admin. Kalau kamu mengajukan bicara dengan konselor, konselor yang menangani permintaanmu juga bisa membaca percakapan itu, dan namamu baru terlihat olehnya setelah ia mengambil permintaan. Jangan kirim data yang sangat pribadi lewat chat.</li>
             <li><strong>Tanda krisis.</strong> Pesan chat atau permintaan konselor yang memuat kata-kata tertentu terkait bahaya terhadap diri sendiri diberi penanda agar staf membacanya lebih dulu. Kalau catatan diary-mu memuat kata-kata seperti itu, kamu hanya akan melihat pesan dukungan, dan isi catatan tidak dikirim ke siapa pun.</li>

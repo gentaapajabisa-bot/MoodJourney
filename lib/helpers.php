@@ -247,6 +247,10 @@ function delete_user_data(int $userId): void
         db_exec("DELETE FROM user_avatars WHERE user_id = ?", "i", [$userId]);
         db_exec("DELETE FROM support_requests WHERE user_id = ?", "i", [$userId]);
         db_exec("DELETE FROM goals WHERE user_id = ?", "i", [$userId]);
+        db_exec("DELETE FROM push_subscriptions WHERE user_id = ?", "i", [$userId]);
+        db_exec("DELETE FROM letters WHERE user_id = ?", "i", [$userId]);
+        db_exec("DELETE FROM butterfly_collection WHERE user_id = ?", "i", [$userId]);
+        db_exec("DELETE FROM challenge_done WHERE user_id = ?", "i", [$userId]);
         db_exec("DELETE FROM users WHERE id = ?", "i", [$userId]);
         $db->commit();
     } catch (Throwable $e) {

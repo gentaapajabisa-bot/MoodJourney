@@ -6,7 +6,12 @@
     "use strict";
 
     var cv = document.getElementById("share-canvas");
-    if (!cv || !cv.getContext) return;
+    if (!cv) return;
+    if (!cv.getContext) {
+        var n0 = document.getElementById("share-fallback-note");
+        if (n0) n0.textContent = "Pratinjau sederhana. Ambil tangkapan layar untuk membagikannya.";
+        return;
+    }
     var ctx = cv.getContext("2d");
     var W = cv.width, H = cv.height;
 
@@ -182,7 +187,19 @@
         });
     }
 
-    function render() { draw(); }
+    var fb = document.getElementById("share-fallback");
+    function render() {
+        try {
+            draw();
+            if (fb) fb.hidden = true;
+            cv.style.display = "block";
+        } catch (e) {
+            if (window.console) console.error("Kartu bagikan gagal digambar", e);
+            if (fb) { fb.hidden = false; var fn = document.getElementById("share-fallback-note"); if (fn) fn.textContent = "Pratinjau sederhana. Ambil tangkapan layar untuk membagikannya."; }
+            cv.style.display = "none";
+            say("Kartu gambar belum bisa dibuat di perangkat ini. Pratinjau sederhana ditampilkan.");
+        }
+    }
     // pastikan font dimuat dulu agar tulisan tidak berganti setelah digambar
     if (document.fonts && document.fonts.ready) {
         document.fonts.ready.then(render);

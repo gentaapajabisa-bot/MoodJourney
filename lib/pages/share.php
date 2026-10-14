@@ -16,7 +16,7 @@ page_header("Bagikan", ["active" => "statistics"]);
 ?>
 <div class="container">
 
-    <?php insights_tabs("butterfly"); ?>
+    <?php insights_tabs("share"); ?>
 
     <section class="dashboard-header">
         <div>
@@ -27,7 +27,13 @@ page_header("Bagikan", ["active" => "statistics"]);
 
     <section class="share-layout">
         <div class="share-stage">
-            <canvas id="share-canvas" width="1080" height="1350"
+            <div class="share-fallback" id="share-fallback">
+                <?= butterfly_svg($stage, $journey["colors"], ["animate" => false]) ?>
+                <strong><?= (int) $journey["days"] ?> hari perjalanan</strong>
+                <span><?= h($label) ?> · <?= (int) $journey["total_logged"] ?> hari tercatat</span>
+                <small id="share-fallback-note">Menyiapkan kartu gambar…</small>
+            </div>
+            <canvas id="share-canvas" width="1080" height="1350" style="width:100%;height:auto;display:none"
                     data-days="<?= (int) $journey["days"] ?>"
                     data-stage="<?= h($stage) ?>"
                     data-stage-label="<?= h($label) ?>"

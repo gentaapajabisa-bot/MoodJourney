@@ -70,6 +70,35 @@ if (is_post()) {
         redirect("/profile.php");
     }
 
+    if (($action === "pin_set" || $action === "pin_remove") && !$isAdmin) {
+        $bucket = "pwchange:" . $userId;
+        $hash = (string) db_value("SELECT password FROM users WHERE id = ?", "i", [$userId], "");
+        $pw = (string) ($_POST["pin_password"] ?? "");
+        $pin = (string) ($_POST["pin"] ?? "");
+        $pin2 = (string) ($_POST["pin_confirm"] ?? "");
+
+        if (rate_count($bucket, 900) >= 5) {
+            flash("error", "Terlalu banyak percobaan. Coba lagi dalam 15 menit.");
+        } elseif (!password_verify($pw, $hash)) {
+            rate_hit($bucket);
+            flash("error", "Password salah.");
+        } elseif ($action === "pin_remove") {
+            db_exec("UPDATE users SET pin_hash = NULL WHERE id = ?", "i", [$userId]);
+            flash("success", "Kunci PIN dimatikan.");
+        } elseif (!preg_match('/^\d{4,6}$/', $pin)) {
+            flash("error", "PIN harus 4 sampai 6 angka.");
+        } elseif ($pin !== $pin2) {
+            flash("error", "Konfirmasi PIN tidak sama.");
+        } elseif (in_array($pin, ["0000", "1111", "1234", "123456", "000000", "111111"], true)) {
+            flash("error", "PIN itu terlalu mudah ditebak. Pilih angka lain.");
+        } else {
+            db_exec("UPDATE users SET pin_hash = ? WHERE id = ?", "si", [password_hash($pin, PASSWORD_DEFAULT), $userId]);
+            pin_unlock();
+            flash("success", "Kunci PIN aktif. PIN diminta lagi setelah " . (PIN_IDLE_SECONDS / 60) . " menit tidak aktif.");
+        }
+        redirect("/profile.php#pin");
+    }
+
     if ($action === "prefs" && !$isAdmin) {
         $email = isset($_POST["reminder_email"]) ? 1 : 0;
         db_exec("UPDATE users SET reminder_email = ? WHERE id = ?", "ii", [$email, $userId]);
@@ -210,6 +239,29 @@ page_header("Profil", ["nav" => nav_for($user), "active" => "profile"]);
 
         <hr class="divider">
 
+        <div class="push-box" id="push-box"
+             data-enabled="<?= push_enabled() ? "1" : "0" ?>"
+             data-key="<?= h((string) env_value("VAPID_PUBLIC_KEY", "")) ?>"
+             data-csrf="<?= h(csrf_token()) ?>">
+            <h3>Notifikasi push <span class="admin-badge">Baru</span></h3>
+            <p class="muted">
+                Pengingat malam yang sampai ke perangkatmu walau MoodJourney sedang tertutup. Hanya dikirim kalau kamu belum
+                mencatat hari itu, paling banyak sekali sehari.
+            </p>
+            <?php if (!push_enabled()): ?>
+                <p class="muted">Belum tersedia: pengelola belum mengaktifkan kunci notifikasi.</p>
+            <?php else: ?>
+                <div class="form-actions">
+                    <button class="btn btn-small" type="button" id="push-on">Aktifkan di perangkat ini</button>
+                    <button class="btn btn-outline btn-small" type="button" id="push-test" hidden>Kirim tes</button>
+                    <button class="btn btn-outline btn-small" type="button" id="push-off" hidden>Matikan</button>
+                </div>
+                <p class="muted" id="push-status" aria-live="polite"></p>
+            <?php endif; ?>
+        </div>
+
+        <hr class="divider">
+
         <div class="browser-reminder" id="browser-reminder" data-supported="0">
             <h3>Pengingat di browser</h3>
             <p class="muted">
@@ -237,10 +289,48 @@ page_header("Profil", ["nav" => nav_for($user), "active" => "profile"]);
         </div>
     </section>
 
-    <section class="card">
+    <section class="card" id="pin">
+        <h2>Kunci PIN</h2>
+        <p class="muted">Diary itu pribadi. Dengan PIN, orang lain yang memegang HP-mu tidak bisa langsung membukanya.
+            PIN diminta saat kamu membuka MoodJourney dan setelah <?= (int) (PIN_IDLE_SECONDS / 60) ?> menit tidak aktif.</p>
+        <p><span class="admin-badge <?= !empty($user["has_pin"]) ? "" : "is-muted" ?>"><?= !empty($user["has_pin"]) ? "PIN aktif" : "PIN belum aktif" ?></span></p>
+        <form method="POST" class="pin-form">
+            <?= csrf_field() ?>
+            <input type="hidden" name="action" value="pin_set">
+            <div class="form-group">
+                <label for="pin-new"><?= !empty($user["has_pin"]) ? "PIN baru" : "Buat PIN" ?> (4 sampai 6 angka)</label>
+                <input class="form-control" type="password" id="pin-new" name="pin" inputmode="numeric" pattern="[0-9]{4,6}" maxlength="6" autocomplete="new-password" required>
+            </div>
+            <div class="form-group">
+                <label for="pin-confirm">Ulangi PIN</label>
+                <input class="form-control" type="password" id="pin-confirm" name="pin_confirm" inputmode="numeric" pattern="[0-9]{4,6}" maxlength="6" autocomplete="new-password" required>
+            </div>
+            <div class="form-group">
+                <label for="pin-password">Password akunmu</label>
+                <input class="form-control" type="password" id="pin-password" name="pin_password" autocomplete="current-password" required>
+            </div>
+            <div class="form-actions">
+                <button class="btn" type="submit"><?= !empty($user["has_pin"]) ? "Ganti PIN" : "Aktifkan PIN" ?></button>
+            </div>
+        </form>
+        <?php if (!empty($user["has_pin"])): ?>
+        <form method="POST" class="pin-form" data-confirm="Matikan kunci PIN?">
+            <?= csrf_field() ?>
+            <input type="hidden" name="action" value="pin_remove">
+            <div class="form-group">
+                <label for="pin-off-password">Password (untuk mematikan PIN)</label>
+                <input class="form-control" type="password" id="pin-off-password" name="pin_password" autocomplete="current-password" required>
+            </div>
+            <button class="btn btn-outline btn-small" type="submit">Matikan PIN</button>
+        </form>
+        <?php endif; ?>
+    </section>
+
+    <section class="card" id="datamu">
         <h2>Datamu</h2>
         <p class="muted">Unduh semua catatanmu kapan saja.</p>
         <div class="form-actions">
+            <a class="btn" href="/cadangan.php">Cadangan lengkap (dengan foto)</a>
             <a class="btn btn-outline" href="/export.php?format=csv">Unduh CSV</a>
             <a class="btn btn-outline" href="/export.php?format=print" target="_blank" rel="noopener">Cetak / simpan PDF</a>
         </div>
@@ -270,4 +360,4 @@ page_header("Profil", ["nav" => nav_for($user), "active" => "profile"]);
     <?php endif; ?>
 
 </div>
-<?php page_footer();
+<?php page_footer(["/assets/js/push.js"]);

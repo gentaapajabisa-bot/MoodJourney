@@ -4175,3 +4175,113 @@ body.has-stageup {
 .share-actions { display: flex; flex-wrap: wrap; gap: 10px; }
 .share-note { min-height: 1.2em; margin: 0; }
 @media (max-width: 800px) { .share-layout { grid-template-columns: 1fr; } .share-stage { max-width: 420px; margin: 0 auto; } }
+
+/* BAGIKAN: cadangan dan tombol di dashboard */
+.share-fallback { display: grid; justify-items: center; gap: 6px; padding: 28px 20px; line-height: 1.3; text-align: center; background: linear-gradient(160deg, #efe9ff, #fbeaf5); color: #3a3170; }
+.share-fallback[hidden] { display: none; }
+.share-fallback svg { width: 160px; height: 160px; }
+.share-fallback strong { font-size: 28px; }
+.garden-share { position: absolute; right: 14px; top: 14px; z-index: 3; }
+@media (max-width: 560px) { .garden-share { top: 10px; right: 10px; } }
+
+/* KUNCI PIN */
+.lock-wrap { min-height: 80vh; display: grid; align-items: center; }
+.lock-card { text-align: center; max-width: 380px; margin: 0 auto; padding: 32px 26px; }
+.lock-art { font-size: 56px; animation: admFloat 5s ease-in-out infinite; }
+.lock-form { display: grid; gap: 12px; margin-top: 14px; }
+.lock-input { text-align: center; font-size: 28px; letter-spacing: 0.5em; padding: 14px; }
+.pin-form { margin-top: 12px; }
+@media (prefers-reduced-motion: reduce) { .lock-art { animation: none; } }
+
+/* CHECK-IN CEPAT, DASHBOARD EKSTRA */
+.quick-card { text-align: center; }
+.quick-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 18px; }
+.quick-mood { display: grid; gap: 6px; justify-items: center; padding: 16px 8px; border: 1px solid var(--border); border-radius: 20px; background: var(--surface); color: inherit; font: inherit; cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease; }
+.quick-mood:hover, .quick-mood:focus-visible { transform: translateY(-3px); border-color: var(--primary); box-shadow: 0 10px 22px rgba(80, 65, 140, 0.16); outline: none; }
+.quick-emoji { font-size: 38px; line-height: 1; }
+.quick-label { font-size: 13px; font-weight: 600; }
+@media (max-width: 520px) { .quick-grid { grid-template-columns: repeat(2, 1fr); } }
+
+.dash-quick { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 14px 18px; margin-bottom: 18px; }
+.dash-quick > span { font-weight: 700; }
+.dash-quick form { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; }
+.dash-quick button { width: 46px; height: 46px; border-radius: 15px; border: 1px solid var(--border); background: var(--surface); font-size: 24px; cursor: pointer; transition: transform 0.12s ease, border-color 0.12s ease; }
+.dash-quick button:hover, .dash-quick button:focus-visible { transform: translateY(-3px) scale(1.06); border-color: var(--primary); outline: none; }
+.dash-quick a { margin-left: auto; }
+
+.dash-extra { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 20px; }
+.dash-extra .card h2 { font-size: 17px; margin: 0 0 8px; }
+.mem-item { display: flex; gap: 12px; padding: 10px 12px; margin-top: 8px; border: 1px solid var(--border); border-radius: 14px; }
+.mem-emoji { font-size: 26px; }
+.mem-item small { display: block; color: var(--muted); }
+.mem-item p { margin: 2px 0 0; font-size: 14px; }
+.care-card { background: linear-gradient(135deg, color-mix(in srgb, #cfe4ff 36%, var(--surface)), color-mix(in srgb, #e6d9ff 36%, var(--surface))); }
+.care-card .care-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.letter-banner { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+/* SURAT */
+.letter-ready { display: flex; gap: 18px; align-items: center; margin-bottom: 18px; background: linear-gradient(135deg, color-mix(in srgb, #ffe3ef 40%, var(--surface)), color-mix(in srgb, #ffeccc 40%, var(--surface))); }
+.letter-seal { font-size: 46px; animation: admFloat 4s ease-in-out infinite; }
+.letter-paper { margin-bottom: 18px; background: linear-gradient(180deg, color-mix(in srgb, #fff7e6 55%, var(--surface)), var(--surface)); border-left: 5px solid #f0c987; }
+.letter-date { margin: 0 0 10px; font-size: 13px; }
+.letter-text { font-size: 17px; line-height: 1.75; margin-bottom: 14px; overflow-wrap: anywhere; }
+.letter-form textarea { resize: vertical; }
+
+/* KOLEKSI */
+.collection-grid { list-style: none; margin: 14px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
+.collection-item { display: grid; justify-items: center; gap: 4px; text-align: center; padding: 14px 10px; border: 1px solid var(--border); border-radius: 20px; background: var(--surface); }
+.collection-item.is-locked { opacity: 0.62; }
+.collection-item.is-owned { box-shadow: 0 8px 20px rgba(80, 65, 140, 0.1); }
+.collection-art { width: 96px; height: 96px; }
+.collection-art svg { width: 100%; height: 100%; }
+.collection-dot { width: 22px; height: 22px; border-radius: 50%; flex: none; }
+
+/* TANTANGAN */
+.challenge-hero { display: flex; gap: 20px; align-items: center; margin-bottom: 18px; }
+.challenge-hero.is-done { border-color: #8fd5b8; background: linear-gradient(135deg, color-mix(in srgb, #d6f1e5 45%, var(--surface)), var(--surface)); }
+.challenge-icon { flex: none; width: 76px; height: 76px; border-radius: 24px; display: grid; place-items: center; font-size: 38px; background: var(--primary-soft); }
+.challenge-body { flex: 1; min-width: 0; }
+.challenge-body h2 { margin: 0 0 4px; }
+.challenge-meta { margin: 0 0 12px; }
+.challenge-ok { color: #2e8b66; font-weight: 700; }
+.challenge-badges { list-style: none; margin: 12px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.challenge-badges li { display: grid; justify-items: center; gap: 4px; text-align: center; padding: 14px 10px; border: 1px solid var(--border); border-radius: 18px; }
+.challenge-badge { font-size: 32px; }
+.dash-chal { display: flex; align-items: center; gap: 14px; }
+.dash-chal .challenge-icon { width: 54px; height: 54px; font-size: 28px; border-radius: 18px; }
+
+/* PUSH, PENGINGAT */
+.push-box { display: grid; gap: 8px; }
+.reminder-form { display: grid; gap: 12px; }
+
+/* LAPORAN & STATUS ADMIN */
+.rep-bars { display: flex; align-items: flex-end; gap: 6px; height: 190px; margin-top: 14px; }
+.rep-col { flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 4px; }
+.rep-col small { font-size: 10px; color: var(--muted); white-space: nowrap; }
+.rep-n { font-size: 11px; font-weight: 700; }
+.rep-bar { width: 100%; display: flex; flex-direction: column-reverse; border-radius: 8px; overflow: hidden; background: var(--border); min-height: 2px; }
+.rep-bar i { display: block; min-height: 0; }
+.rep-bar i.is-pos, .rep-key.is-pos { background: #8fd5b8; }
+.rep-bar i.is-neu, .rep-key.is-neu { background: #c9c4e6; }
+.rep-bar i.is-low, .rep-key.is-low { background: #f2a99a; }
+.rep-bar i.is-flat { background: #bfb0f5; }
+.rep-bar i.is-new { background: #9bc4f2; }
+.rep-key { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin: 0 2px 0 8px; }
+.yip-bar-label { min-width: 120px; font-size: 14px; }
+.status-list { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 8px; }
+.status-row { display: flex; gap: 12px; align-items: center; padding: 10px 12px; border: 1px solid var(--border); border-radius: 14px; }
+.status-row small { display: block; font-size: 12px; }
+.status-dot { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 14px; }
+.status-row.is-ok .status-dot { background: #d6f1e5; color: #23795a; }
+.status-row.is-warn .status-dot { background: #fdecc8; color: #9a6a10; }
+.status-row.is-fail .status-dot { background: #fbd5cd; color: #b4402a; }
+@media (max-width: 560px) { .challenge-hero { flex-direction: column; align-items: flex-start; } .letter-ready { flex-direction: column; align-items: flex-start; } }
+@media (prefers-reduced-motion: reduce) { .letter-seal { animation: none; } .quick-mood, .dash-quick button { transition: none; } }
+
+/* perbaikan: tombol di dalam notice tetap terbaca, tombol bagikan tidak menimpa tautan taman */
+.notice .btn:not(.btn-outline), .notice a.btn:not(.btn-outline) { color: #fff; text-decoration: none; }
+.garden-share { right: 190px; }
+@media (max-width: 640px) { .garden-share { top: auto; bottom: 12px; right: 12px; } }
+.status-row .status-dot::before { content: none; }
+.status-row .status-dot { line-height: 1; }
+@media (max-width: 640px) { .garden-share { top: auto; bottom: 12px; right: auto; left: 12px; } }
