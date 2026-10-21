@@ -8,7 +8,7 @@
  * terkait dilakukan di kode aplikasi.
  */
 
-const SCHEMA_VERSION = 7;
+const SCHEMA_VERSION = 8;
 
 function column_exists(mysqli $db, string $table, string $column): bool
 {
@@ -341,6 +341,8 @@ function ensure_schema(mysqli $db): void
     add_column($db, "support_requests", "preferred_time", "VARCHAR(20) NULL");
     add_column($db, "support_requests", "first_time", "TINYINT(1) NULL");
     add_column($db, "support_requests", "preferred_counselor_id", "INT NULL");
+
+    // skema v8: lampiran formulir + nomor telepon (add_column aman dijalankan ulang)
     add_column($db, "support_requests", "form_data", "MEDIUMTEXT NULL");
     add_column($db, "support_requests", "phone", "VARCHAR(25) NULL");
 
