@@ -11,6 +11,9 @@ $durations = ["baru" => "Baru beberapa hari", "minggu" => "Beberapa minggu", "bu
 $times = ["pagi" => "Pagi (06.00–11.59)", "siang" => "Siang (12.00–16.59)", "malam" => "Malam (17.00–21.00)", "bebas" => "Kapan saja"];
 $feelings = [1 => "Sangat berat", 2 => "Berat", 3 => "Sedang", 4 => "Cukup ringan", 5 => "Baik-baik saja"];
 
+$consentText = "Saya mengerti dan setuju formulir ini dibaca admin dan konselor yang menangani saya.";
+$noticeText = "Isi formulir dan percakapan dengan konselor bisa dibaca admin dan konselor yang menanganimu. Catatan diary dan fotomu tetap tidak terlihat. Kalau ada tanda bahaya terhadap dirimu, permintaan diberi penanda agar ditangani lebih dulu.";
+
 $open = db_one(
     "SELECT sr.*, c.name AS counselor_name
      FROM support_requests sr LEFT JOIN users c ON c.id = sr.counselor_id
@@ -70,17 +73,42 @@ if (is_post() && $open === null) {
         rate_hit($bucket);
         $urgent = (crisis_detect($old["message"]) || $old["feeling"] === 1) ? 1 : 0;
         $preferred = $old["pref"] > 0 ? $old["pref"] : null;
-        $assigned = counselor_match($old["topic"], $preferred);
+        $prefName = "Tidak ada preferensi (admin yang menentukan)";
+        if ($preferred !== null) {
+            $prefName = (string) db_value("SELECT name FROM users WHERE id = ? AND role = 'counselor' AND is_active = 1", "i", [$preferred], "");
+            if ($prefName === "") {
+                $preferred = null;
+                $prefName = "Tidak ada preferensi (admin yang menentukan)";
+            }
+        }
 
+        /* Lampiran: seluruh pertanyaan, pernyataan, dan jawabannya disimpan apa adanya */
+        $attachment = [
+            ["t" => "Bagian 1: Apa yang ingin kamu bicarakan?", "type" => "section"],
+            ["t" => "Topik utama", "a" => $topics[$old["topic"]]],
+            ["t" => "Pernahkah kamu bicara dengan konselor sebelumnya?", "a" => $old["first_time"] === "1" ? "Belum, ini pertama kali" : "Pernah"],
+            ["t" => "Bagian 2: Bagaimana perasaanmu sekarang?", "type" => "section"],
+            ["t" => "Seberapa berat yang kamu rasakan saat ini?", "a" => $old["feeling"] . " · " . $feelings[$old["feeling"]]],
+            ["t" => "Sudah berapa lama kamu merasakannya?", "a" => $durations[$old["duration"]]],
+            ["t" => "Ceritakan singkat", "a" => $old["message"]],
+            ["t" => "Bagian 3: Preferensi sesi", "type" => "section"],
+            ["t" => "Waktu yang paling nyaman", "a" => $times[$old["time"]]],
+            ["t" => "Konselor yang diharapkan (opsional)", "a" => $prefName],
+            ["t" => "Bagian 4: Persetujuan", "type" => "section"],
+            ["t" => "Pernyataan", "a" => $noticeText],
+            ["t" => "Persetujuan: " . $consentText, "a" => "Setuju"],
+        ];
+
+        /* Tidak ada pemilihan otomatis: admin yang memeriksa ketersediaan dan menugaskan konselor */
         db_exec(
             "INSERT INTO support_requests
-                (user_id, topic, message, status, counselor_id, urgent, feeling_level, duration, preferred_time, first_time, preferred_counselor_id, updated_at)
-             VALUES (?, ?, ?, 'waiting', ?, ?, ?, ?, ?, ?, ?, NOW())",
-            "issiiissii",
-            [$userId, $old["topic"], $old["message"], $assigned, $urgent, $old["feeling"], $old["duration"], $old["time"], (int) $old["first_time"], $preferred]
+                (user_id, topic, message, status, counselor_id, urgent, feeling_level, duration, preferred_time, first_time, preferred_counselor_id, form_data, updated_at)
+             VALUES (?, ?, ?, 'waiting', NULL, ?, ?, ?, ?, ?, ?, ?, NOW())",
+            "issiissiis",
+            [$userId, $old["topic"], $old["message"], $urgent, $old["feeling"], $old["duration"], $old["time"], (int) $old["first_time"], $preferred, json_encode($attachment, JSON_UNESCAPED_UNICODE)]
         );
 
-        $_SESSION["csr_done"] = ["assigned" => $assigned !== null, "urgent" => $urgent === 1];
+        $_SESSION["csr_done"] = ["urgent" => $urgent === 1];
         redirect("/formulir-konselor.php");
     }
 }
@@ -104,11 +132,7 @@ page_header("Bicara dengan konselor", ["active" => "support"]);
         <section class="card cform-done" role="status">
             <h2>Formulir terkirim 🤍</h2>
             <p>
-                <?php if ($done["assigned"]): ?>
-                    Terima kasih sudah berani bercerita. Permintaanmu sudah diarahkan ke konselor yang tersedia. Kamu akan menerima balasan lewat chat di halaman Dukungan.
-                <?php else: ?>
-                    Terima kasih sudah berani bercerita. Saat ini belum ada konselor yang tersedia untuk topikmu, jadi permintaanmu masuk antrean dan akan diambil begitu ada yang siap.
-                <?php endif; ?>
+                Terima kasih sudah berani bercerita. Formulirmu sudah diterima admin. Admin akan memeriksa ketersediaan konselor lalu mengarahkanmu ke konselor yang sesuai. Kamu akan melihat perkembangannya di halaman Dukungan.
             </p>
             <?php if ($done["urgent"]): ?>
                 <div class="notice notice-error">
@@ -127,9 +151,9 @@ page_header("Bicara dengan konselor", ["active" => "support"]);
                 <?php if ($open["status"] === "active"): ?>
                     <strong>sedang ditangani<?= $open["counselor_name"] ? " oleh " . h($open["counselor_name"]) : "" ?></strong>
                 <?php elseif ($open["counselor_id"]): ?>
-                    <strong>diarahkan ke <?= h($open["counselor_name"]) ?>, menunggu diterima</strong>
+                    <strong>sudah diarahkan ke <?= h($open["counselor_name"]) ?>, menunggu diterima</strong>
                 <?php else: ?>
-                    <strong>menunggu konselor tersedia</strong>
+                    <strong>menunggu admin memeriksa ketersediaan konselor</strong>
                 <?php endif; ?>
             </p>
             <p class="muted">Kamu bisa mengisi formulir baru setelah permintaan ini selesai atau dibatalkan.</p>
@@ -145,9 +169,10 @@ page_header("Bicara dengan konselor", ["active" => "support"]);
         <?php endif; ?>
 
         <section class="card cform-avail" aria-label="Ketersediaan konselor">
-            <h2>Konselor yang tersedia</h2>
+            <h2>Konselor kami</h2>
+            <p class="muted">Admin yang memastikan ketersediaan dan menugaskan konselor setelah formulirmu diterima.</p>
             <?php if ($available === []): ?>
-                <p class="muted">Saat ini belum ada konselor yang menandai dirinya tersedia. Kamu tetap bisa mengisi formulir; permintaanmu masuk antrean.</p>
+                <p class="muted">Saat ini belum ada konselor yang menandai dirinya tersedia. Kamu tetap bisa mengisi formulir; admin akan menghubungimu saat ada yang siap.</p>
             <?php else: ?>
                 <ul class="cform-counselors">
                     <?php foreach ($available as $c): ?>
@@ -248,9 +273,9 @@ page_header("Bicara dengan konselor", ["active" => "support"]);
                 </fieldset>
 
                 <fieldset class="form-group">
-                    <legend>Pilih konselor <small class="muted">(opsional)</small></legend>
+                    <legend>Konselor yang kamu harapkan <small class="muted">(opsional)</small></legend>
                     <div class="cform-options cform-options-col" id="cf-pref">
-                        <label class="cform-opt"><input type="radio" name="pref" value="0" <?= ($old["pref"] ?? 0) === 0 ? "checked" : "" ?>><span>Arahkan otomatis ke yang paling sesuai (disarankan)</span></label>
+                        <label class="cform-opt"><input type="radio" name="pref" value="0" <?= ($old["pref"] ?? 0) === 0 ? "checked" : "" ?>><span>Serahkan ke admin (disarankan)</span></label>
                         <?php foreach ($available as $c): ?>
                             <label class="cform-opt" data-topics="<?= h(implode(",", $c["topic_keys"])) ?>">
                                 <input type="radio" name="pref" value="<?= (int) $c["id"] ?>" <?= ($old["pref"] ?? 0) === (int) $c["id"] ? "checked" : "" ?>>
@@ -258,20 +283,18 @@ page_header("Bicara dengan konselor", ["active" => "support"]);
                             </label>
                         <?php endforeach; ?>
                     </div>
-                    <small class="muted">Kalau konselor pilihanmu tidak menangani topik ini, kami arahkan ke yang paling sesuai.</small>
+                    <small class="muted">Ini hanya permintaan. Admin yang menentukan konselor berdasarkan ketersediaan.</small>
                 </fieldset>
             </div>
 
             <!-- Bagian 4 -->
             <div class="cform-step" data-step="4">
                 <h2>4. Persetujuan</h2>
-                <div class="notice">
-                    Isi formulir dan percakapan dengan konselor bisa dibaca konselor yang menanganimu. Catatan diary dan fotomu tetap tidak terlihat. Kalau ada tanda bahaya terhadap dirimu, permintaan diberi penanda agar ditangani lebih dulu.
-                </div>
+                <div class="notice"><?= h($noticeText) ?></div>
                 <div class="form-group">
                     <label class="cform-check">
                         <input type="checkbox" name="consent" value="1" <?= !empty($old["consent"]) ? "checked" : "" ?> required>
-                        <span>Saya mengerti dan setuju formulir ini dibaca konselor yang menangani saya. <span class="req" aria-hidden="true">*</span></span>
+                        <span><?= h($consentText) ?> <span class="req" aria-hidden="true">*</span></span>
                     </label>
                     <?php if (isset($errors["consent"])): ?><p class="cform-error"><?= h($errors["consent"]) ?></p><?php endif; ?>
                 </div>

@@ -143,6 +143,7 @@ CREATE TABLE IF NOT EXISTS support_requests (
     preferred_time VARCHAR(20) NULL,
     first_time TINYINT(1) NULL,
     preferred_counselor_id INT NULL,
+    form_data MEDIUMTEXT NULL,
     INDEX idx_sr_user (user_id),
     INDEX idx_sr_status (status),
     INDEX idx_sr_counselor (counselor_id)

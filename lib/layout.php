@@ -125,6 +125,7 @@ function page_header(string $title, array $opts = []): void
                 <span class="badge" data-unread-badge <?= $unread > 0 ? "" : "hidden" ?>><?= $unread ?></span>
             </a>
             <a href="/admin/laporan.php" <?= $active === "admin-report" ? 'aria-current="page"' : "" ?>>Laporan</a>
+            <a href="/admin/permintaan.php" <?= $active === "admin-requests" ? 'aria-current="page"' : "" ?>>Permintaan konselor</a>
             <a href="/admin/status.php" <?= $active === "admin-status" ? 'aria-current="page"' : "" ?>>Status</a>
             <a href="/profile.php" class="nav-profile" <?= $active === "profile" ? 'aria-current="page"' : "" ?>><?= avatar_html($user, 26) ?> Profil</a>
             <span class="admin-badge">Admin</span>
