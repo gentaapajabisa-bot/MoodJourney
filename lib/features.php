@@ -286,3 +286,68 @@ function diary_after_save(int $userId, string $stageBefore, string $mood): void
         flash("info", "Terima kasih sudah jujur pada perasaanmu. Kalau mau ditemani, ada latihan napas singkat di Tenang.");
     }
 }
+
+
+/* ================= Formulir konselor ================= */
+
+/** Topik yang bisa dipilih di formulir (kunci => label). */
+function counselor_topics(): array
+{
+    return [
+        "stres"    => "Stres & kelelahan",
+        "cemas"    => "Cemas & overthinking",
+        "sedih"    => "Sedih & suasana hati rendah",
+        "hubungan" => "Hubungan & pertemanan",
+        "keluarga" => "Keluarga",
+        "akademik" => "Sekolah / kuliah",
+        "kerja"    => "Pekerjaan",
+        "diri"     => "Mengenal & menerima diri",
+        "lainnya"  => "Lainnya",
+    ];
+}
+
+/** Konselor aktif yang menandai dirinya tersedia, beserta beban kerja saat ini. */
+function counselors_available(): array
+{
+    $rows = db_all(
+        "SELECT u.id, u.name, u.bio, u.counselor_topics, u.counselor_hours,
+                (SELECT COUNT(*) FROM support_requests sr
+                  WHERE sr.counselor_id = u.id AND sr.status IN ('waiting','active')) AS load_n
+         FROM users u
+         WHERE u.role = 'counselor' AND u.is_active = 1 AND u.counselor_available = 1
+         ORDER BY load_n ASC, u.id ASC"
+    );
+    foreach ($rows as &$r) {
+        $r["topic_keys"] = array_values(array_filter(array_map("trim", explode(",", (string) $r["counselor_topics"]))));
+    }
+    return $rows;
+}
+
+/** Apakah konselor ini menangani topik tersebut? Konselor tanpa daftar topik dianggap umum. */
+function counselor_handles(array $c, string $topic): bool
+{
+    return $c["topic_keys"] === [] || in_array($topic, $c["topic_keys"], true);
+}
+
+/**
+ * Pilih konselor untuk permintaan baru: pilihan pengguna (kalau masih tersedia dan cocok),
+ * selain itu konselor tersedia yang menangani topiknya dengan beban paling ringan.
+ * null = belum ada yang tersedia; permintaan tetap masuk antrean.
+ */
+function counselor_match(string $topic, ?int $preferredId = null): ?int
+{
+    $list = counselors_available();
+    if ($preferredId) {
+        foreach ($list as $c) {
+            if ((int) $c["id"] === $preferredId && counselor_handles($c, $topic)) {
+                return $preferredId;
+            }
+        }
+    }
+    foreach ($list as $c) { // sudah terurut dari beban paling ringan
+        if (counselor_handles($c, $topic)) {
+            return (int) $c["id"];
+        }
+    }
+    return null;
+}

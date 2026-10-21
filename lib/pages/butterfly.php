@@ -8,6 +8,30 @@ $meta = BUTTERFLY_STAGES[$j["display"]];
 $stageNames = array_keys(BUTTERFLY_STAGES);
 $moodLabel = $j["mood"] !== null ? mood_label($j["mood"]) : null;
 
+/* Filosofi per tahap, berurutan sesuai BUTTERFLY_STAGES (telur, ulat, kepompong, kupu-kupu muda, kupu-kupu dewasa) */
+$philosophy = [
+    [
+        "meaning" => "Awal yang kecil tetap layak dirayakan.",
+        "why"     => "Telur terlihat diam, padahal di dalamnya sudah ada kehidupan. Begitu juga langkah pertamamu: satu catatan mood sudah cukup untuk memulai, tanpa harus langsung \"baik-baik saja\".",
+    ],
+    [
+        "meaning" => "Tumbuh itu lapar, berantakan, dan butuh waktu.",
+        "why"     => "Ulat makan terus dan tubuhnya berubah sedikit demi sedikit. Ini tahap membiasakan diri: mengenali perasaan lewat catatan harian, termasuk hari-hari yang terasa berat.",
+    ],
+    [
+        "meaning" => "Berhenti sejenak bukan berarti mundur.",
+        "why"     => "Di dalam kepompong, ulat tampak tidak melakukan apa-apa, padahal tubuhnya sedang disusun ulang. Kami memilih kepompong sebagai tempat istirahat saat kamu absen, supaya jeda terasa aman dan bukan hukuman.",
+    ],
+    [
+        "meaning" => "Sayap baru butuh waktu untuk menguat.",
+        "why"     => "Kupu-kupu yang baru keluar harus menunggu sayapnya mengering sebelum bisa terbang. Pada tahap ini kebiasaanmu mulai terbentuk, dan kamu mulai melihat pola dari perasaanmu sendiri.",
+    ],
+    [
+        "meaning" => "Berubah bukan berarti menjadi orang lain, tetapi menjadi lebih utuh.",
+        "why"     => "Kupu-kupu dewasa membawa semua tahap sebelumnya. Kamu tidak harus selalu bahagia untuk sampai di sini; kamu sampai karena tetap mau jujur pada dirimu sendiri.",
+    ],
+];
+
 page_header("Metamorfosis", ["active" => "statistics"]);
 ?>
 <div class="container">
@@ -81,6 +105,37 @@ page_header("Metamorfosis", ["active" => "statistics"]);
                 </li>
             <?php endforeach; ?>
         </ol>
+    </section>
+
+    <section class="card" id="filosofi">
+        <h2>Filosofi di balik kupu-kupu 🦋</h2>
+        <p class="philosophy-lead">Metamorfosis adalah perubahan total: ulat yang merayap menjadi makhluk bersayap. Prosesnya tidak instan, tidak bisa dipercepat, dan melewati fase yang tampak seperti diam. Kami memakai kupu-kupu sebagai teman perjalananmu karena kehidupan emosi kita bekerja serupa.</p>
+        <blockquote class="philosophy-quote">Perubahan yang bertahan jarang datang dari satu lompatan besar. Ia datang dari hal kecil yang diulang dengan sabar.</blockquote>
+
+        <h3>Mengapa kupu-kupu?</h3>
+        <ol class="philosophy-reasons">
+            <li><strong>Tumbuh itu bertahap.</strong> Tidak ada ulat yang menjadi kupu-kupu dalam semalam. Mencatat mood sedikit demi sedikit juga begitu: manfaatnya terasa setelah kamu konsisten, bukan setelah sekali mencoba.</li>
+            <li><strong>Istirahat adalah bagian dari proses.</strong> Fase kepompong mengajarkan bahwa jeda itu wajar. Karena itu, hari yang terlewat tidak menghapus perjalananmu, dan kupu-kupu hanya beristirahat sampai kamu kembali.</li>
+            <li><strong>Setiap warna sayap itu valid.</strong> Warna sayapmu mengikuti mood yang paling sering kamu catat. Tidak ada warna yang lebih baik; semuanya bagian dari dirimu.</li>
+            <li><strong>Kerentanan mendahului keindahan.</strong> Kupu-kupu melewati fase paling rapuh sebelum bisa terbang. Mengakui perasaan yang sulit adalah bagian dari tumbuh, bukan tanda kamu gagal.</li>
+        </ol>
+
+        <h3>Makna tiap tahap</h3>
+        <ul class="philosophy-list">
+            <?php foreach ($stageNames as $i => $key):
+                $ph = $philosophy[$i] ?? null;
+                if ($ph === null) { continue; }
+            ?>
+                <li>
+                    <span class="philosophy-art"><?= butterfly_svg($key, $j["colors"], ["animate" => false, "label" => BUTTERFLY_STAGES[$key]["label"]]) ?></span>
+                    <div>
+                        <h3><?= h(BUTTERFLY_STAGES[$key]["label"]) ?></h3>
+                        <p class="p-meaning"><?= h($ph["meaning"]) ?></p>
+                        <p class="p-why"><?= h($ph["why"]) ?></p>
+                    </div>
+                </li>
+            <?php endforeach; ?>
+        </ul>
     </section>
 
     <section class="card">

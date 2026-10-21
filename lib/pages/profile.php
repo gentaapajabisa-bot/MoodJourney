@@ -39,6 +39,24 @@ if (is_post()) {
         redirect("/profile.php");
     }
 
+    if ($action === "counselor_avail" && $user["role"] === "counselor") {
+        $avail = isset($_POST["counselor_available"]) ? 1 : 0;
+        $valid = array_keys(counselor_topics());
+        $picked = array_values(array_intersect($valid, (array) ($_POST["topics"] ?? [])));
+        $hours = trim((string) ($_POST["hours"] ?? ""));
+        if (mb_strlen($hours) > 120) {
+            flash("error", "Jam layanan maksimal 120 karakter.");
+        } else {
+            db_exec(
+                "UPDATE users SET counselor_available = ?, counselor_topics = ?, counselor_hours = ? WHERE id = ?",
+                "issi",
+                [$avail, $picked ? implode(",", $picked) : null, $hours !== "" ? $hours : null, $userId]
+            );
+            flash("success", $avail ? "Kamu ditandai tersedia untuk menerima permintaan." : "Kamu ditandai tidak tersedia. Permintaan baru tidak diarahkan kepadamu.");
+        }
+        redirect("/profile.php#ketersediaan");
+    }
+
     if ($action === "avatar_remove") {
         avatar_delete($userId);
         flash("success", "Foto profil dihapus.");
@@ -136,6 +154,10 @@ $stats = db_one(
     [$userId]
 );
 
+$cInfo = $user["role"] === "counselor"
+    ? db_one("SELECT counselor_available, counselor_topics, counselor_hours FROM users WHERE id = ?", "i", [$userId])
+    : null;
+
 page_header("Profil", ["nav" => nav_for($user), "active" => "profile"]);
 ?>
 <div class="container narrow">
@@ -218,6 +240,38 @@ page_header("Profil", ["nav" => nav_for($user), "active" => "profile"]);
     </section>
 
     <?php if (!$isAdmin): ?>
+    <?php if ($cInfo !== null):
+        $mine = array_filter(array_map("trim", explode(",", (string) $cInfo["counselor_topics"])));
+    ?>
+    <section class="card" id="ketersediaan">
+        <h2>Ketersediaan konselor</h2>
+        <p class="muted">Pengguna yang mengisi formulir konselor hanya diarahkan ke konselor yang menandai dirinya tersedia dan menangani topik mereka.</p>
+        <form method="POST">
+            <?= csrf_field() ?>
+            <input type="hidden" name="action" value="counselor_avail">
+            <div class="form-group">
+                <label class="cform-check">
+                    <input type="checkbox" name="counselor_available" value="1" <?= (int) $cInfo["counselor_available"] === 1 ? "checked" : "" ?>>
+                    <span>Saya tersedia menerima permintaan baru</span>
+                </label>
+            </div>
+            <fieldset class="form-group">
+                <legend>Topik yang saya tangani <small class="muted">(kosongkan = semua topik)</small></legend>
+                <div class="chip-row">
+                    <?php foreach (counselor_topics() as $k => $label): ?>
+                        <label class="chip"><input type="checkbox" name="topics[]" value="<?= h($k) ?>" <?= in_array($k, $mine, true) ? "checked" : "" ?>><span><?= h($label) ?></span></label>
+                    <?php endforeach; ?>
+                </div>
+            </fieldset>
+            <div class="form-group">
+                <label for="c-hours">Jam layanan</label>
+                <input class="form-control" id="c-hours" name="hours" maxlength="120" value="<?= h($cInfo["counselor_hours"] ?? "") ?>" placeholder="Contoh: Senin–Jumat, 09.00–17.00 WIB">
+            </div>
+            <button class="btn" type="submit">Simpan ketersediaan</button>
+        </form>
+    </section>
+    <?php endif; ?>
+
     <section class="card" id="reminders">
         <h2>Pengingat</h2>
         <p class="muted">Pengingat lembut untuk mencatat mood. Kamu bisa mematikannya kapan saja.</p>

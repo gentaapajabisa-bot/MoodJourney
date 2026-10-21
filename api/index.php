@@ -56,6 +56,7 @@ $routes = [
     "admin/laporan"  => "admin/report",
     "admin/status"   => "admin/status",
     "dukungan"       => "support",
+    "formulir-konselor" => "counselor_form",
     "bot"            => "bot",
     "tenang"         => "calm",
     "photo"          => "photo",

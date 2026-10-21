@@ -114,8 +114,8 @@ const BOT_KB = [
         "id" => "chat",
         "q" => "Bagaimana menghubungi admin atau konselor?",
         "keys" => ["admin", "konselor", "psikolog", "curhat", "ngobrol", "bicara dengan", "hubungi", "chat", "bantuan orang"],
-        "a" => "Untuk soal aplikasi, kirim pesan lewat chat dengan tim. Kalau kamu ingin bicara dengan konselor, ajukan permintaan di bagian \"Bicara dengan konselor\" pada halaman Dukungan. Permintaanmu akan ditangani sesuai jam layanan, jadi balasan mungkin tidak langsung.",
-        "links" => [["Chat dengan tim", "/chat.php"], ["Ajukan konselor", "/dukungan.php#konselor"]],
+        "a" => "Untuk soal aplikasi, kirim pesan lewat chat dengan tim. Kalau kamu ingin bicara dengan konselor, isi formulir konselor (topik, perasaanmu, dan waktu yang nyaman). Kamu akan diarahkan ke konselor yang tersedia dan ditangani sesuai jam layanan, jadi balasan mungkin tidak langsung.",
+        "links" => [["Chat dengan tim", "/chat.php"], ["Isi formulir konselor", "/formulir-konselor.php"]],
     ],
     [
         "id" => "panduan",
@@ -282,8 +282,8 @@ const BOT_KB = [
         "id" => "konselor",
         "q" => "Bagaimana bicara dengan konselor?",
         "keys" => ["konselor", "psikolog", "curhat", "bicara dengan", "ngobrol dengan", "butuh teman", "butuh bantuan"],
-        "a" => "Buka Dukungan, lalu pilih \"Bicara dengan konselor\" dan tulis topiknya. Permintaanmu masuk antrean dan akan diambil konselor atau ditugaskan admin. Kalau kondisinya darurat, hubungi 112 atau Healing119 (119 lalu tekan 8).",
-        "links" => [["Bicara dengan konselor", "/dukungan.php#konselor"], ["Layanan bantuan", "/bantuan.php"]],
+        "a" => "Buka formulir konselor di menu Dukungan, lalu isi beberapa pertanyaan singkat (topik, perasaan, dan waktu yang nyaman). Kamu akan diarahkan ke konselor yang tersedia; kalau belum ada, permintaanmu masuk antrean. Kalau kondisinya darurat, hubungi 112 atau Healing119 (119 lalu tekan 8).",
+        "links" => [["Isi formulir konselor", "/formulir-konselor.php"], ["Layanan bantuan", "/bantuan.php"]],
     ],
     [
         "id" => "error",
@@ -326,7 +326,7 @@ function bot_answer_inner(string $question, ?int $userId = null): array
             "links"   => [
                 ["Hubungi 112", "tel:112"],
                 ["Healing119 (119 lalu tekan 8)", "tel:119"],
-                ["Bicara dengan konselor", "/dukungan.php#konselor"],
+                ["Isi formulir konselor", "/formulir-konselor.php"],
                 ["Layanan bantuan", "/bantuan.php"],
             ],
         ];
@@ -393,7 +393,7 @@ function bot_answer_inner(string $question, ?int $userId = null): array
         "ai"      => false,
         "reply"   => "Aku belum menemukan jawaban yang pas untuk itu, tapi aku bisa bantu soal cara memakai MoodJourney: mencatat mood, foto, riwayat, target, kupu-kupu, kalender setahun, dan akun. "
                    . "Coba tulis dengan kata lain, atau pilih salah satu pertanyaan di bawah. Kalau butuh bantuan langsung, tim kami atau konselor siap membantu.",
-        "links"   => [["Chat dengan tim", "/chat.php"], ["Bicara dengan konselor", "/dukungan.php#konselor"]],
+        "links"   => [["Chat dengan tim", "/chat.php"], ["Isi formulir konselor", "/formulir-konselor.php"]],
         "suggest" => bot_suggestions(),
     ];
 }

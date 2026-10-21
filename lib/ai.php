@@ -34,7 +34,7 @@ const AI_LINKS = [
     "/cadangan.php"            => "Cadangan",
     "/tenang.php"              => "Ruang tenang",
     "/dukungan.php"            => "Dukungan",
-    "/dukungan.php#konselor"   => "Bicara dengan konselor",
+    "/formulir-konselor.php"   => "Bicara dengan konselor",
     "/chat.php"                => "Chat dengan tim",
     "/profile.php"             => "Profil",
     "/bantuan.php"             => "Bantuan darurat",
@@ -98,7 +98,7 @@ Suara hujan malam, pantai, fokus, dan tidur yang bisa dicampur, dengan pengatur 
 
 8. DUKUNGAN (menu Dukungan)
 - Asisten: bot ini, untuk pertanyaan cara memakai situs.
-- Bicara dengan konselor: pilih topik, ceritakan singkat, lalu kirim permintaan. Permintaan ditangani sesuai jam layanan sehingga balasan tidak selalu langsung. Permintaan bisa dibatalkan.
+- Bicara dengan konselor: isi formulir bertahap (topik, perasaan, waktu yang nyaman, persetujuan), lalu sistem mengarahkan ke konselor yang tersedia. Permintaan ditangani sesuai jam layanan sehingga balasan tidak selalu langsung. Permintaan bisa dibatalkan.
 - Chat dengan tim: pesan ke admin untuk masalah akun atau fitur. Admin bukan tenaga kesehatan jiwa.
 
 9. PROFIL (menu Profil)

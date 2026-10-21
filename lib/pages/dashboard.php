@@ -188,7 +188,7 @@ page_header("Dashboard", ["active" => "dashboard"]);
             <p class="muted">Terima kasih sudah jujur pada perasaanmu. Kamu tidak harus menghadapi hari yang berat sendirian.</p>
             <div class="care-actions">
                 <a class="btn btn-small" href="/tenang.php">Latihan napas</a>
-                <a class="btn btn-outline btn-small" href="/dukungan.php#konselor">Bicara dengan konselor</a>
+                <a class="btn btn-outline btn-small" href="/formulir-konselor.php">Bicara dengan konselor</a>
                 <a class="btn btn-outline btn-small" href="/bantuan.php">Layanan bantuan</a>
             </div>
         </section>
