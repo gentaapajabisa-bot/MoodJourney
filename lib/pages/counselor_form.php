@@ -1,18 +1,20 @@
 <?php
 /**
  * Formulir "Bicara dengan konselor" (pengganti tombol ajukan satu langkah).
- * Pengguna mengisi form bertahap, lalu sistem mengarahkan ke konselor yang tersedia.
+ * Pengguna mengisi form bertahap; admin yang memeriksa ketersediaan dan menugaskan konselor.
  */
+require_once dirname(__DIR__) . "/cform.php";
+
 $user = require_member();
 $userId = (int) $user["id"];
 
-$topics = counselor_topics();
+$topics = cform_topics();
 $durations = ["baru" => "Baru beberapa hari", "minggu" => "Beberapa minggu", "bulan" => "Beberapa bulan", "lama" => "Lebih dari setengah tahun"];
 $times = ["pagi" => "Pagi (06.00–11.59)", "siang" => "Siang (12.00–16.59)", "malam" => "Malam (17.00–21.00)", "bebas" => "Kapan saja"];
 $feelings = [1 => "Sangat berat", 2 => "Berat", 3 => "Sedang", 4 => "Cukup ringan", 5 => "Baik-baik saja"];
 
 $consentText = "Saya mengerti dan setuju formulir ini dibaca admin dan konselor yang menangani saya.";
-$noticeText = "Isi formulir dan percakapan dengan konselor bisa dibaca admin dan konselor yang menanganimu. Catatan diary dan fotomu tetap tidak terlihat. Kalau ada tanda bahaya terhadap dirimu, permintaan diberi penanda agar ditangani lebih dulu.";
+$noticeText = "Isi formulir dan percakapan dengan konselor bisa dibaca admin dan konselor yang menanganimu. Catatan diary dan fotomu tetap tidak terlihat. Nomor teleponmu hanya dilihat admin dan konselor yang menanganimu. Kalau ada tanda bahaya terhadap dirimu, permintaan diberi penanda agar ditangani lebih dulu.";
 
 $open = db_one(
     "SELECT sr.*, c.name AS counselor_name
@@ -25,6 +27,7 @@ $open = db_one(
 
 $old = [];
 $errors = [];
+$lastPhone = (string) db_value("SELECT phone FROM support_requests WHERE user_id = ? AND phone IS NOT NULL ORDER BY id DESC LIMIT 1", "i", [$userId], "");
 
 if (is_post() && $open === null) {
     csrf_verify("/formulir-konselor.php");
@@ -37,6 +40,7 @@ if (is_post() && $open === null) {
         "time"       => (string) ($_POST["time"] ?? ""),
         "first_time" => (string) ($_POST["first_time"] ?? ""),
         "pref"       => (int) ($_POST["pref"] ?? 0),
+        "phone"      => trim((string) ($_POST["phone"] ?? "")),
         "consent"    => isset($_POST["consent"]),
     ];
 
@@ -59,6 +63,10 @@ if (is_post() && $open === null) {
     }
     if (!in_array($old["first_time"], ["1", "0"], true)) {
         $errors["first_time"] = "Pilih salah satu.";
+    }
+    $phone = cform_clean_phone($old["phone"]);
+    if ($phone === null) {
+        $errors["phone"] = "Masukkan nomor telepon/WhatsApp yang valid, mis. 081234567890 atau +6281234567890.";
     }
     if (!$old["consent"]) {
         $errors["consent"] = "Centang persetujuan ini untuk melanjutkan.";
@@ -94,6 +102,7 @@ if (is_post() && $open === null) {
             ["t" => "Bagian 3: Preferensi sesi", "type" => "section"],
             ["t" => "Waktu yang paling nyaman", "a" => $times[$old["time"]]],
             ["t" => "Konselor yang diharapkan (opsional)", "a" => $prefName],
+            ["t" => "Nomor telepon / WhatsApp yang bisa dihubungi", "a" => $phone],
             ["t" => "Bagian 4: Persetujuan", "type" => "section"],
             ["t" => "Pernyataan", "a" => $noticeText],
             ["t" => "Persetujuan: " . $consentText, "a" => "Setuju"],
@@ -102,10 +111,10 @@ if (is_post() && $open === null) {
         /* Tidak ada pemilihan otomatis: admin yang memeriksa ketersediaan dan menugaskan konselor */
         db_exec(
             "INSERT INTO support_requests
-                (user_id, topic, message, status, counselor_id, urgent, feeling_level, duration, preferred_time, first_time, preferred_counselor_id, form_data, updated_at)
-             VALUES (?, ?, ?, 'waiting', NULL, ?, ?, ?, ?, ?, ?, ?, NOW())",
-            "issiissiis",
-            [$userId, $old["topic"], $old["message"], $urgent, $old["feeling"], $old["duration"], $old["time"], (int) $old["first_time"], $preferred, json_encode($attachment, JSON_UNESCAPED_UNICODE)]
+                (user_id, topic, message, status, counselor_id, urgent, feeling_level, duration, preferred_time, first_time, preferred_counselor_id, form_data, phone, updated_at)
+             VALUES (?, ?, ?, 'waiting', NULL, ?, ?, ?, ?, ?, ?, ?, ?, NOW())",
+            "issiissiiss",
+            [$userId, $old["topic"], $old["message"], $urgent, $old["feeling"], $old["duration"], $old["time"], (int) $old["first_time"], $preferred, json_encode($attachment, JSON_UNESCAPED_UNICODE), $phone]
         );
 
         $_SESSION["csr_done"] = ["urgent" => $urgent === 1];
@@ -116,7 +125,7 @@ if (is_post() && $open === null) {
 $done = $_SESSION["csr_done"] ?? null;
 unset($_SESSION["csr_done"]);
 
-$available = counselors_available();
+$available = cform_available();
 $topicChosen = $old["topic"] ?? "";
 
 page_header("Bicara dengan konselor", ["active" => "support"]);
@@ -271,6 +280,13 @@ page_header("Bicara dengan konselor", ["active" => "support"]);
                     </div>
                     <?php if (isset($errors["time"])): ?><p class="cform-error"><?= h($errors["time"]) ?></p><?php endif; ?>
                 </fieldset>
+
+                <div class="form-group">
+                    <label for="cf-phone">Nomor telepon / WhatsApp yang bisa dihubungi <span class="req" aria-hidden="true">*</span></label>
+                    <input class="form-control" type="tel" id="cf-phone" name="phone" inputmode="tel" autocomplete="tel" maxlength="20" required placeholder="081234567890" value="<?= h($old["phone"] ?? $lastPhone) ?>">
+                    <small class="muted">Hanya dilihat admin dan konselor yang menanganimu, untuk menjadwalkan sesi.</small>
+                    <?php if (isset($errors["phone"])): ?><p class="cform-error"><?= h($errors["phone"]) ?></p><?php endif; ?>
+                </div>
 
                 <fieldset class="form-group">
                     <legend>Konselor yang kamu harapkan <small class="muted">(opsional)</small></legend>

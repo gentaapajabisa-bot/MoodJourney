@@ -2,8 +2,10 @@
 /**
  * Admin: tinjau formulir konselor yang masuk, cek ketersediaan konselor, lalu tugaskan.
  */
+require_once dirname(__DIR__, 2) . "/cform.php";
+
 $user = require_admin();
-$topics = counselor_topics();
+$topics = cform_topics();
 
 if (is_post()) {
     csrf_verify("/admin/permintaan.php");
@@ -112,6 +114,13 @@ page_header("Permintaan konselor", ["nav" => "admin", "active" => "admin-request
                 <?php endif; ?>
                 <?php if ($r["preferred_name"]): ?> · Diharapkan: <?= h($r["preferred_name"]) ?><?php endif; ?>
             </p>
+            <?php if (!empty($r["phone"])): ?>
+                <p>
+                    Telepon/WhatsApp: <strong><?= h($r["phone"]) ?></strong>
+                    · <a href="tel:<?= h($r["phone"]) ?>">Telepon</a>
+                    · <a href="https://wa.me/<?= h(cform_wa_number((string) $r["phone"])) ?>" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+                </p>
+            <?php endif; ?>
 
             <details class="req-attach" <?= (int) $r["urgent"] === 1 ? "open" : "" ?>>
                 <summary>Lampiran formulir</summary>

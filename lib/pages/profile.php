@@ -1,4 +1,5 @@
 <?php
+require_once dirname(__DIR__) . "/cform.php";
 $user = require_login();
 $userId = (int) $user["id"];
 $isAdmin = $user["role"] !== "user"; // admin dan konselor: tanpa fitur diary
@@ -41,7 +42,7 @@ if (is_post()) {
 
     if ($action === "counselor_avail" && $user["role"] === "counselor") {
         $avail = isset($_POST["counselor_available"]) ? 1 : 0;
-        $valid = array_keys(counselor_topics());
+        $valid = array_keys(cform_topics());
         $picked = array_values(array_intersect($valid, (array) ($_POST["topics"] ?? [])));
         $hours = trim((string) ($_POST["hours"] ?? ""));
         if (mb_strlen($hours) > 120) {
@@ -258,7 +259,7 @@ page_header("Profil", ["nav" => nav_for($user), "active" => "profile"]);
             <fieldset class="form-group">
                 <legend>Topik yang saya tangani <small class="muted">(kosongkan = semua topik)</small></legend>
                 <div class="chip-row">
-                    <?php foreach (counselor_topics() as $k => $label): ?>
+                    <?php foreach (cform_topics() as $k => $label): ?>
                         <label class="chip"><input type="checkbox" name="topics[]" value="<?= h($k) ?>" <?= in_array($k, $mine, true) ? "checked" : "" ?>><span><?= h($label) ?></span></label>
                     <?php endforeach; ?>
                 </div>

@@ -53,6 +53,11 @@
             if (msg.value.trim().length < 10) fail(msg.parentNode, "Ceritakan singkat (minimal 10 karakter).");
         } else if (i === 2) {
             if (!checked("time")) fail(step.querySelectorAll("fieldset")[0], "Pilih waktu yang nyaman.");
+            var ph = form.querySelector("#cf-phone");
+            var clean = ph.value.replace(/[\s().\-]/g, "");
+            if (!/^\+?\d{9,15}$/.test(clean) || !/^(0|62|\+62)/.test(clean)) {
+                fail(ph.parentNode, "Masukkan nomor telepon/WhatsApp yang valid, mis. 081234567890.");
+            }
         } else if (i === 3) {
             var c = form.querySelector('input[name="consent"]');
             if (!c.checked) fail(c.closest(".form-group"), "Centang persetujuan ini untuk melanjutkan.");

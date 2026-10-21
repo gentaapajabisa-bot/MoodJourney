@@ -342,6 +342,7 @@ function ensure_schema(mysqli $db): void
     add_column($db, "support_requests", "first_time", "TINYINT(1) NULL");
     add_column($db, "support_requests", "preferred_counselor_id", "INT NULL");
     add_column($db, "support_requests", "form_data", "MEDIUMTEXT NULL");
+    add_column($db, "support_requests", "phone", "VARCHAR(25) NULL");
 
     run_query($db,
         "REPLACE INTO app_meta (k, v) VALUES ('schema_version', '" . (int) SCHEMA_VERSION . "')"
